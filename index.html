@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game Review</title>
+<style>
+:root{
+  --bg:#f4f1ea; --panel:#ffffff; --ink:#1f2328; --muted:#6b7280; --line:#e5e1d8;
+  --light:#ece3cf; --dark:#a07c5a; --accent:#2563eb;
+  --c-brilliant:#0ea5a4; --c-great:#3b82f6; --c-best:#16a34a; --c-excellent:#65a30d;
+  --c-good:#84a98c; --c-inaccuracy:#eab308; --c-mistake:#f97316; --c-blunder:#dc2626; --c-forced:#94a3b8; --c-book:#a47551;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#16181d; --panel:#1f232a; --ink:#e6e8eb; --muted:#9aa3ad; --line:#2d333c;
+  --light:#cdbb9a; --dark:#86664a; --accent:#60a5fa;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.grid{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:16px;margin-top:14px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.boardrow{display:flex;gap:8px}
+.evalbar{width:22px;border-radius:6px;overflow:hidden;background:#333;position:relative;flex:none}
+.evalbar .w{position:absolute;bottom:0;left:0;right:0;background:#f5f5f5;transition:height .25s}
+.evalbar.flip .w{bottom:auto;top:0}
+.evalbar span{position:absolute;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:#777}
+.board{position:relative;flex:1;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);border-radius:6px;overflow:hidden;user-select:none}
+.sq{position:relative;display:flex;align-items:center;justify-content:center}
+.sq.l{background:var(--light)} .sq.d{background:var(--dark)}
+.sq .hl{position:absolute;inset:0;opacity:.45}
+.pc{position:relative;font-size:min(9vw,52px);line-height:1;font-family:"Segoe UI Symbol","DejaVu Sans","Noto Sans Symbols 2",serif}
+.pc.w{color:#fff;text-shadow:0 0 1px #000,0 0 1px #000,1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000}
+.pc.b{color:#111;text-shadow:0 0 1px #fff4}
+.coord{position:absolute;font-size:10px;font-weight:700;opacity:.7}
+.coord.f{right:3px;bottom:1px} .coord.r{left:3px;top:1px}
+.badge{position:absolute;top:-2px;right:-2px;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px #0006;z-index:3}
+svg.arrows{position:absolute;inset:0;pointer-events:none;z-index:2}
+.players{display:flex;justify-content:space-between;align-items:center;margin:6px 0;font-weight:600}
+.players .acc{font-size:13px;padding:2px 8px;border-radius:6px;background:var(--line)}
+.nav{display:flex;gap:6px;margin-top:10px}
+.nav button,.btn{flex:1;padding:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;font-size:16px;cursor:pointer}
+.nav button:hover,.btn:hover{border-color:var(--accent)}
+.coach{display:flex;gap:10px;align-items:flex-start;min-height:64px}
+.coach .icon{flex:none;width:34px;height:34px;border-radius:50%;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.coach b{font-size:16px}
+.moves{max-height:300px;overflow:auto;margin-top:10px;border-top:1px solid var(--line);padding-top:6px;font-variant-numeric:tabular-nums}
+.mrow{display:grid;grid-template-columns:36px 1fr 1fr;gap:4px}
+.mv{padding:3px 6px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.mv:hover{background:var(--line)} .mv.cur{outline:2px solid var(--accent)}
+.dot{width:16px;height:16px;border-radius:50%;color:#fff;font-size:9px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.num{color:var(--muted);padding:3px 0}
+table.sum{width:100%;border-collapse:collapse;font-size:14px}
+table.sum td{padding:4px 6px;border-top:1px solid var(--line)}
+table.sum td:nth-child(1),table.sum td:nth-child(3){text-align:center;font-weight:700;width:60px}
+table.sum tr.accrow td{font-size:20px;border-top:none}
+.graph{width:100%;height:90px;display:block;cursor:pointer;border-radius:6px;margin-top:10px;background:#3a3a3a}
+.progress{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:12px 0}
+.progress div{height:100%;background:var(--accent);width:0;transition:width .2s}
+.stack>*+*{margin-top:12px}
+.keys li{cursor:pointer;margin:4px 0}
+.gamelist a{display:flex;justify-content:space-between;padding:10px;border-top:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.gamelist a:hover{background:var(--line)}
+.w-win{color:var(--c-best);font-weight:700} .w-loss{color:var(--c-blunder);font-weight:700} .w-draw{color:var(--muted);font-weight:700}
+select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="card">Loading…</div></div>
+
+<script type="module">
+import { Chess } from 'https://cdn.jsdelivr.net/npm/chess.js@1.0.0/+esm';
+
+const SF_BASE = 'https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/';
+const HAS_WASM = typeof WebAssembly === 'object';
+// WASM build is ~5x faster; its loader wants stockfish.wasm "next to" the script, so point that fetch at the CDN.
+const WORKER_SRC = HAS_WASM
+  ? `const f=self.fetch.bind(self);self.fetch=(u,o)=>f(String(u).endsWith('stockfish.wasm')?'${SF_BASE}stockfish.wasm':u,o);importScripts('${SF_BASE}stockfish.wasm.js');`
+  : `importScripts('${SF_BASE}stockfish.js');`;
+const app = document.getElementById('app');
+const qs = new URLSearchParams(location.search);
+const USER = (qs.get('user') || '').toLowerCase();
+const GAME_ID = qs.get('id');
+const MONTH = qs.get('month');
+let DEPTH = +(qs.get('depth') || 14);
+
+const CLS = {
+  brilliant: {sym:'!!', label:'Brilliant', color:'var(--c-brilliant)'},
+  great:     {sym:'!',  label:'Great move', color:'var(--c-great)'},
+  best:      {sym:'★',  label:'Best move', color:'var(--c-best)'},
+  excellent: {sym:'✓',  label:'Excellent', color:'var(--c-excellent)'},
+  good:      {sym:'✓',  label:'Good', color:'var(--c-good)'},
+  book:      {sym:'📖', label:'Book', color:'var(--c-book)'},
+  forced:    {sym:'□',  label:'Forced', color:'var(--c-forced)'},
+  inaccuracy:{sym:'?!', label:'Inaccuracy', color:'var(--c-inaccuracy)'},
+  mistake:   {sym:'?',  label:'Mistake', color:'var(--c-mistake)'},
+  blunder:   {sym:'??', label:'Blunder', color:'var(--c-blunder)'},
+};
+const ORDER = ['brilliant','great','best','excellent','good','book','forced','inaccuracy','mistake','blunder'];
+const VAL = {p:1,n:3,b:3,r:5,q:9,k:100};
+const GLYPH = {k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const getJSON = async url => { const r = await fetch(url); if (!r.ok) throw new Error(`chess.com API ${r.status} for ${url}`); return r.json(); };
+
+/* ---------- engine ---------- */
+class Engine {
+  constructor(){
+    const blob = new Blob([WORKER_SRC], {type:'application/javascript'});
+    this.w = new Worker(URL.createObjectURL(blob));
+    this.subs = [];
+    this.w.onmessage = e => { const line = String(e.data); this.subs.slice().forEach(f => f(line)); };
+  }
+  send(c){ this.w.postMessage(c); }
+  waitFor(pred){ return new Promise(res => { const f = l => { if (pred(l)) { this.subs = this.subs.filter(x => x !== f); res(l); } }; this.subs.push(f); }); }
+  async init(){
+    this.send('uci'); await this.waitFor(l => l === 'uciok');
+    this.send('setoption name MultiPV value 2');
+    this.send('isready'); await this.waitFor(l => l === 'readyok');
+  }
+  async analyse(fen, depth){
+    const lines = {};
+    const f = l => {
+      if (!l.startsWith('info') || !l.includes(' pv ')) return;
+      const k = +(l.match(/ multipv (\d+)/)?.[1] || 1);
+      const s = l.match(/ score (cp|mate) (-?\d+)/);
+      if (s) lines[k] = {type:s[1], value:+s[2], pv:l.split(' pv ')[1].trim().split(' ')};
+    };
+    this.subs.push(f);
+    this.send('position fen ' + fen);
+    this.send('go depth ' + depth);
+    await this.waitFor(l => l.startsWith('bestmove'));
+    this.subs = this.subs.filter(x => x !== f);
+    return [lines[1], lines[2]].filter(Boolean);
+  }
+}
+
+/* ---------- eval helpers (all white point-of-view) ---------- */
+const winFromCp = cp => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1);
+function toWhite(line, stm){
+  const sgn = stm === 'w' ? 1 : -1;
+  if (line.type === 'mate') { const m = line.value * sgn; return {mate:m, win: m > 0 ? 100 : 0, text:(m > 0 ? 'M' : '-M') + Math.abs(m)}; }
+  const cp = line.value * sgn;
+  return {cp, win: winFromCp(cp), text:(cp >= 0 ? '+' : '') + (cp/100).toFixed(1)};
+}
+const moveAcc = loss => Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669));
+
+/* ---------- data ---------- */
+async function findGame(){
+  let months = MONTH ? [MONTH] : [];
+  if (!months.length) {
+    const {archives} = await getJSON(`https://api.chess.com/pub/player/${USER}/games/archives`);
+    months = archives.slice(-3).reverse().map(u => u.split('/games/')[1]);
+  }
+  for (const m of months) {
+    const {games} = await getJSON(`https://api.chess.com/pub/player/${USER}/games/${m}`);
+    const g = games.find(g => g.url.endsWith('/' + GAME_ID));
+    if (g) return g;
+  }
+  throw new Error('Game not found in that player\'s recent archives.');
+}
+
+function buildPositions(pgn){
+  const src = new Chess(); src.loadPgn(pgn);
+  const hdr = src.header();
+  const start = hdr.SetUp === '1' && hdr.FEN ? hdr.FEN : undefined;
+  const moves = src.history({verbose:true});
+  const c = start ? new Chess(start) : new Chess();
+  const fens = [c.fen()], meta = [{checkmate:c.isCheckmate(), draw:c.isDraw(), legal:c.moves().length}];
+  for (const m of moves) { c.move(m.san); fens.push(c.fen()); meta.push({checkmate:c.isCheckmate(), draw:c.isDraw()||c.isStalemate(), legal:c.moves().length}); }
+  return {moves, fens, meta};
+}
+
+async function analyseAll(fens, meta, onProgress){
+  const key = `rv:${GAME_ID}:${DEPTH}`;
+  try { const c = JSON.parse(localStorage.getItem(key)); if (c && c.length === fens.length) return c; } catch {}
+  const eng = new Engine(); await eng.init();
+  const out = [];
+  for (let i = 0; i < fens.length; i++) {
+    const stm = fens[i].split(' ')[1];
+    if (meta[i].checkmate) out.push({win: stm === 'w' ? 0 : 100, text:'#', lines:[]});
+    else if (meta[i].draw) out.push({win:50, text:'½', lines:[]});
+    else {
+      const raw = await eng.analyse(fens[i], DEPTH);
+      const lines = raw.map(l => ({uci:l.pv[0], pv:l.pv.slice(0,6), ...toWhite(l, stm)}));
+      out.push({win:lines[0].win, text:lines[0].text, lines});
+    }
+    onProgress(i + 1, fens.length);
+  }
+  eng.w.terminate();
+  try { localStorage.setItem(key, JSON.stringify(out)); } catch {}
+  return out;
+}
+
+function uciToSan(fen, uci){
+  try { const c = new Chess(fen); return c.move({from:uci.slice(0,2), to:uci.slice(2,4), promotion:uci[4]}).san; } catch { return uci; }
+}
+
+function classify(moves, fens, meta, A){
+  return moves.map((m, i) => {
+    const pov = x => m.color === 'w' ? x : 100 - x;
+    const before = pov(A[i].win), after = pov(A[i+1].win);
+    const loss = Math.max(0, before - after);
+    const played = m.from + m.to + (m.promotion || '');
+    const [l1, l2] = A[i].lines;
+    const isBest = l1 && played === l1.uci;
+    let cls;
+    if (meta[i].legal === 1) cls = 'forced';
+    else if ((i < 8 && loss < 20) || (i < 16 && loss < 8 && Math.abs(A[i+1].win - 50) < 15)) cls = 'book';
+    else if (loss < 2 && isSacrifice(m, fens[i+1]) && after >= 50 && before < 90) cls = 'brilliant';
+    else if (isBest && l2 && pov(l1.win) - pov(l2.win) >= 15 && before < 95 && !(m.captured && moves[i-1]?.to === m.to)) cls = 'great';
+    else if (isBest || loss < 1) cls = 'best';
+    else if (loss < 3) cls = 'excellent';
+    else if (loss < 6) cls = 'good';
+    else if (loss < 12) cls = 'inaccuracy';
+    else if (loss < 22) cls = 'mistake';
+    else cls = 'blunder';
+    return {cls, loss, acc: moveAcc(loss), best: l1 ? uciToSan(fens[i], l1.uci) : null, bestUci: l1?.uci, isBest};
+  });
+}
+// heuristic: a non-pawn piece lands where a cheaper enemy piece can take it, and it wasn't simply a trade
+function isSacrifice(m, fenAfter){
+  if (m.piece === 'p' || m.piece === 'k' || m.promotion) return false;
+  const gained = m.captured ? VAL[m.captured] : 0;
+  if (gained >= VAL[m.piece]) return false;
+  const c = new Chess(fenAfter);
+  return c.moves({verbose:true}).some(r => r.to === m.to && VAL[r.piece] < VAL[m.piece]);
+}
+
+function accuracy(rs, color, moves){
+  const a = rs.filter((r, i) => moves[i].color === color).map(r => r.acc);
+  if (!a.length) return 0;
+  const mean = a.reduce((x, y) => x + y, 0) / a.length;
+  const harm = a.length / a.reduce((x, y) => x + 1 / Math.max(y, 5), 0);
+  return (mean + harm) / 2;
+}
+
+/* ---------- views ---------- */
+async function gameList(){
+  const {archives} = await getJSON(`https://api.chess.com/pub/player/${USER}/games/archives`);
+  const months = archives.slice(-2).reverse();
+  let games = [];
+  for (const u of months) { const {games:g} = await getJSON(u); games.push(...g.map(x => ({...x, _m:u.split('/games/')[1]}))); }
+  games = games.filter(g => g.rules === 'chess').sort((a, b) => b.end_time - a.end_time).slice(0, 40);
+  app.innerHTML = `<h1>Recent games — ${esc(USER)}</h1><div class="sub">Pick a game to review</div>
+  <div class="card gamelist" style="margin-top:12px;padding:0">${games.map(g => {
+    const me = g.white.username.toLowerCase() === USER ? g.white : g.black, op = me === g.white ? g.black : g.white;
+    const r = resultFor(me, op);
+    const id = g.url.split('/').pop();
+    return `<a href="?user=${encodeURIComponent(USER)}&id=${id}&month=${g._m}"><span>vs <b>${esc(op.username)}</b> (${op.rating}) · ${esc(g.time_class)}</span><span class="w-${r.kind}">${r.short}</span></a>`;
+  }).join('')}</div>`;
+}
+
+const DRAWS = {agreed:'agreement', repetition:'repetition', stalemate:'stalemate', insufficient:'insufficient material', '50move':'50-move rule', timevsinsufficient:'timeout vs insufficient material'};
+function resultFor(me, op){
+  if (me.result === 'win') return {kind:'win', short:'Won', text:`You won by ${op.result === 'checkmated' ? 'checkmate' : op.result === 'timeout' ? 'time' : op.result === 'resigned' ? 'resignation' : op.result}`};
+  if (DRAWS[me.result]) return {kind:'draw', short:'Draw', text:`Draw by ${DRAWS[me.result]}`};
+  return {kind:'loss', short:'Lost', text:`You lost by ${me.result === 'checkmated' ? 'checkmate' : me.result === 'timeout' ? 'time' : me.result === 'resigned' ? 'resignation' : me.result}`};
+}
+
+async function review(){
+  const g = await findGame();
+  if (g.rules !== 'chess') throw new Error('Only standard chess games can be reviewed (this one is ' + g.rules + ').');
+  const flipped = g.black.username.toLowerCase() === USER;
+  const me = flipped ? g.black : g.white, op = flipped ? g.white : g.black;
+  const res = resultFor(me, op);
+  const {moves, fens, meta} = buildPositions(g.pgn);
+  document.title = `Review: ${g.white.username} vs ${g.black.username}`;
+
+  app.innerHTML = `<h1>${esc(g.white.username)} (${g.white.rating}) vs ${esc(g.black.username)} (${g.black.rating})</h1>
+    <div class="sub">${esc(res.text)} · ${esc(g.time_class)} · ${new Date(g.end_time*1000).toLocaleString()} · <a href="${esc(g.url)}" target="_blank" rel="noopener">open on chess.com</a></div>
+    <div class="card" style="margin-top:14px"><b>Analyzing with Stockfish (depth ${DEPTH})…</b> <span id="pt"></span><div class="progress"><div id="pb"></div></div><div class="sub">Runs in your browser. Takes about a minute; results are saved, so reopening is instant.</div></div>`;
+  const A = await analyseAll(fens, meta, (d, t) => { document.getElementById('pb').style.width = (100*d/t) + '%'; document.getElementById('pt').textContent = `${d}/${t}`; });
+  const R = classify(moves, fens, meta, A);
+  const accW = accuracy(R, 'w', moves), accB = accuracy(R, 'b', moves);
+  let ply = 0;
+
+  const count = (color, cls) => R.filter((r, i) => moves[i].color === color && r.cls === cls).length;
+  const keyMoments = R.map((r, i) => ({...r, i})).filter((r, i) => ['brilliant','great','mistake','blunder'].includes(r.cls));
+
+  app.innerHTML = `
+  <h1>${esc(g.white.username)} vs ${esc(g.black.username)}</h1>
+  <div class="sub">${esc(res.text)} · ${esc(g.time_class)} · ${new Date(g.end_time*1000).toLocaleString()} · <a href="${esc(g.url)}" target="_blank" rel="noopener">open on chess.com</a> · <a href="?user=${encodeURIComponent(USER)}">all games</a></div>
+  <div class="grid">
+    <div>
+      <div class="players"><span id="topName"></span><span class="acc" id="topAcc"></span></div>
+      <div class="boardrow"><div class="evalbar ${flipped ? 'flip' : ''}" id="evalbar"><div class="w"></div><span id="evtxt"></span></div><div class="board" id="board"></div></div>
+      <div class="players"><span id="botName"></span><span class="acc" id="botAcc"></span></div>
+      <div class="nav"><button data-n="first">⏮</button><button data-n="prev">◀</button><button data-n="next">▶</button><button data-n="last">⏭</button></div>
+      <svg class="graph" id="graph" preserveAspectRatio="none"></svg>
+    </div>
+    <div class="stack">
+      <div class="card coach" id="coach"></div>
+      <div class="card">
+        <table class="sum">
+          <tr class="accrow"><td>${accW.toFixed(1)}</td><td style="text-align:center;font-size:13px;color:var(--muted)">Accuracy</td><td>${accB.toFixed(1)}</td></tr>
+          <tr><td style="font-size:12px">${esc(g.white.username)}</td><td></td><td style="font-size:12px">${esc(g.black.username)}</td></tr>
+          ${ORDER.map(c => `<tr><td>${count('w', c)}</td><td><span class="dot" style="background:${CLS[c].color}">${CLS[c].sym}</span> ${CLS[c].label}</td><td>${count('b', c)}</td></tr>`).join('')}
+        </table>
+      </div>
+      <div class="card"><b>Moves</b><div class="moves" id="moves"></div></div>
+      <div class="card"><b>Key moments</b>${keyMoments.length ? `<ul class="keys">${keyMoments.map(k => `<li data-p="${k.i+1}"><span class="dot" style="background:${CLS[k.cls].color}">${CLS[k.cls].sym}</span> ${Math.floor(k.i/2)+1}${moves[k.i].color === 'w' ? '.' : '…'} ${esc(moves[k.i].san)} — ${CLS[k.cls].label}${k.cls === 'mistake' || k.cls === 'blunder' ? ` (best: ${esc(k.best)})` : ''}</li>`).join('')}</ul>` : '<div class="sub">No big swings — a clean game.</div>'}</div>
+      <div class="card sub">Depth: <select id="depth">${[12,14,16,18,20].map(d => `<option ${d === DEPTH ? 'selected' : ''}>${d}</option>`).join('')}</select> — higher is a deeper (slower) analysis.</div>
+    </div>
+  </div>`;
+
+  const top = flipped ? 'w' : 'b';
+  const pl = c => c === 'w' ? g.white : g.black;
+  document.getElementById('topName').textContent = `${pl(top).username} (${pl(top).rating})`;
+  document.getElementById('botName').textContent = `${pl(top === 'w' ? 'b' : 'w').username} (${pl(top === 'w' ? 'b' : 'w').rating})`;
+  document.getElementById('topAcc').textContent = (top === 'w' ? accW : accB).toFixed(1);
+  document.getElementById('botAcc').textContent = (top === 'w' ? accB : accW).toFixed(1);
+
+  // move list
+  const mv = document.getElementById('moves');
+  let html = '';
+  for (let i = 0; i < moves.length; i += 2) {
+    const cell = j => j < moves.length ? `<div class="mv" data-p="${j+1}"><span class="dot" style="background:${CLS[R[j].cls].color}">${CLS[R[j].cls].sym}</span>${esc(moves[j].san)}</div>` : '<div></div>';
+    html += `<div class="mrow"><div class="num">${i/2+1}.</div>${cell(i)}${cell(i+1)}</div>`;
+  }
+  mv.innerHTML = html;
+
+  // graph
+  const gr = document.getElementById('graph'), N = A.length - 1 || 1;
+  const pts = A.map((a, i) => `${(i/N*100).toFixed(2)},${(100 - a.win).toFixed(2)}`).join(' ');
+  gr.setAttribute('viewBox', '0 0 100 100');
+  gr.innerHTML = `<polygon points="0,100 ${pts} 100,100" fill="#f2f2f2"/><line x1="0" y1="50" x2="100" y2="50" stroke="#888" stroke-width=".4"/>
+    ${R.map((r, i) => ['mistake','blunder','brilliant','great'].includes(r.cls) ? `<line x1="${((i+1)/N*100).toFixed(2)}" x2="${((i+1)/N*100).toFixed(2)}" y1="${(100 - A[i+1].win - 5).toFixed(2)}" y2="${(100 - A[i+1].win + 5).toFixed(2)}" stroke="${CLS[r.cls].color}" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : '').join('')}
+    <line id="gcur" x1="0" y1="0" x2="0" y2="100" stroke="var(--accent)" stroke-width=".6"/>`;
+  gr.addEventListener('click', e => { const b = gr.getBoundingClientRect(); go(Math.round((e.clientX - b.left) / b.width * N)); });
+
+  document.querySelectorAll('[data-p]').forEach(el => el.addEventListener('click', () => go(+el.dataset.p)));
+  document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', () => go({first:0, prev:ply-1, next:ply+1, last:moves.length}[b.dataset.n])));
+  document.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') go(ply-1); if (e.key === 'ArrowRight') go(ply+1); });
+  document.getElementById('depth').addEventListener('change', e => { qs.set('depth', e.target.value); location.search = qs.toString(); });
+
+  function sqXY(sq){ const f = sq.charCodeAt(0) - 97, r = +sq[1]; return flipped ? [7 - f + .5, r - 1 + .5] : [f + .5, 8 - r + .5]; }
+  function arrow(uci, color){
+    const [x1, y1] = sqXY(uci.slice(0,2)), [x2, y2] = sqXY(uci.slice(2,4));
+    const len = Math.hypot(x2-x1, y2-y1), ux = (x2-x1)/len, uy = (y2-y1)/len, ex = x2 - ux*.3, ey = y2 - uy*.3;
+    return `<line x1="${x1}" y1="${y1}" x2="${ex}" y2="${ey}" stroke="${color}" stroke-width=".18" stroke-linecap="round" opacity=".85"/>
+      <polygon points="${x2},${y2} ${ex - uy*.25},${ey + ux*.25} ${ex + uy*.25},${ey - ux*.25}" fill="${color}" opacity=".85"/>`;
+  }
+
+  function go(p){
+    ply = Math.max(0, Math.min(moves.length, p));
+    const c = new Chess(fens[ply]), board = c.board();
+    const last = ply > 0 ? moves[ply-1] : null, r = ply > 0 ? R[ply-1] : null;
+    let h = '';
+    for (let dr = 0; dr < 8; dr++) for (let dc = 0; dc < 8; dc++) {
+      const row = flipped ? 7 - dr : dr, col = flipped ? 7 - dc : dc;
+      const sq = 'abcdefgh'[col] + (8 - row), cell = board[row][col];
+      const light = (row + col) % 2 === 0;
+      let inner = '';
+      if (last && (sq === last.from || sq === last.to)) inner += `<div class="hl" style="background:${CLS[r.cls].color}"></div>`;
+      if (cell) inner += `<span class="pc ${cell.color}">${GLYPH[cell.type]}&#xFE0E;</span>`;
+      if (last && sq === last.to) inner += `<span class="badge" style="background:${CLS[r.cls].color}">${CLS[r.cls].sym}</span>`;
+      if (dr === 7) inner += `<span class="coord f" style="color:${light ? 'var(--dark)' : 'var(--light)'}">${'abcdefgh'[col]}</span>`;
+      if (dc === 0) inner += `<span class="coord r" style="color:${light ? 'var(--dark)' : 'var(--light)'}">${8 - row}</span>`;
+      h += `<div class="sq ${light ? 'l' : 'd'}">${inner}</div>`;
+    }
+    let arrows = '';
+    if (r && !r.isBest && r.bestUci && !['brilliant','great','best','forced','book'].includes(r.cls)) arrows += arrow(r.bestUci, '#16a34a');
+    h += `<svg class="arrows" viewBox="0 0 8 8">${arrows}</svg>`;
+    document.getElementById('board').innerHTML = h;
+
+    const ev = A[ply];
+    document.querySelector('#evalbar .w').style.height = ev.win + '%';
+    const et = document.getElementById('evtxt'); et.textContent = ev.text;
+    const whiteAhead = ev.win >= 50;
+    et.style.top = (whiteAhead !== flipped) ? 'auto' : '3px'; et.style.bottom = (whiteAhead !== flipped) ? '3px' : 'auto';
+
+    const coach = document.getElementById('coach');
+    if (!r) coach.innerHTML = `<div class="icon" style="background:var(--muted)">♟</div><div><b>Start of the game</b><div class="sub">Use ▶ / ◀ or arrow keys to step through. Click any move, the graph, or a key moment to jump.</div></div>`;
+    else {
+      const who = last.color === 'w' ? g.white.username : g.black.username;
+      let msg = `<b>${esc(last.san)} is ${/^[aeiou]/i.test(CLS[r.cls].label) ? 'an' : 'a'} ${CLS[r.cls].label.toLowerCase()}</b>`;
+      let detail = `${esc(who)} · eval ${A[ply-1].text} → ${ev.text}`;
+      if (!r.isBest && r.best && !['brilliant','forced','book'].includes(r.cls)) detail += `<br>Best was <b>${esc(r.best)}</b> (${A[ply-1].lines[0].text})${A[ply-1].lines[0].pv.length > 1 ? `, line: ${esc(pvSan(fens[ply-1], A[ply-1].lines[0].pv))}` : ''}`;
+      if (r.cls === 'brilliant') detail += '<br>A strong piece sacrifice that keeps the advantage.';
+      if (r.cls === 'great') detail += '<br>The only move that keeps the position — every alternative was clearly worse.';
+      if (r.cls === 'forced') detail += '<br>The only legal move.';
+      if (r.cls === 'book') detail += `<br>Opening theory${g.eco ? ` — <a href="${esc(g.eco)}" target="_blank" rel="noopener">${esc(decodeURIComponent(g.eco.split('/').pop()).replace(/-/g, ' '))}</a>` : ''}.`;
+      coach.innerHTML = `<div class="icon" style="background:${CLS[r.cls].color}">${CLS[r.cls].sym}</div><div>${msg}<div class="sub">${detail}</div></div>`;
+    }
+    document.querySelectorAll('.mv').forEach(el => el.classList.toggle('cur', +el.dataset.p === ply));
+    document.querySelector('.mv.cur')?.scrollIntoView({block:'nearest'});
+    const gc = document.getElementById('gcur'); gc.setAttribute('x1', ply/N*100); gc.setAttribute('x2', ply/N*100);
+  }
+  go(0);
+}
+function pvSan(fen, pv){
+  const c = new Chess(fen), out = [];
+  for (const u of pv.slice(0,5)) { try { out.push(c.move({from:u.slice(0,2), to:u.slice(2,4), promotion:u[4]}).san); } catch { break; } }
+  return out.join(' ');
+}
+
+(async () => {
+  try {
+    if (!USER) {
+      app.innerHTML = `<h1>Game Review</h1><div class="card"><form><label>chess.com username <input name="user" required style="padding:6px"></label> <button class="btn" style="flex:none;font-size:14px">Show games</button></form></div>`;
+    } else if (!GAME_ID) await gameList();
+    else await review();
+  } catch (e) {
+    app.innerHTML = `<div class="card"><b>Couldn't load the review.</b><div class="sub">${esc(e.message)}</div></div>`;
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
