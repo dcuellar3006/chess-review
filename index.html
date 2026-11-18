@@ -4,16 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Game Review</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessground@9.1.1/assets/chessground.cburnett.css">
 <style>
 :root{
   --bg:#f4f1ea; --panel:#ffffff; --ink:#1f2328; --muted:#6b7280; --line:#e5e1d8;
-  --light:#ece3cf; --dark:#a07c5a; --accent:#2563eb;
+  --light:#eeeed2; --dark:#769656; --accent:#2563eb;
   --c-brilliant:#0ea5a4; --c-great:#3b82f6; --c-best:#16a34a; --c-excellent:#65a30d;
   --c-good:#84a98c; --c-inaccuracy:#eab308; --c-mistake:#f97316; --c-blunder:#dc2626; --c-forced:#94a3b8; --c-book:#a47551;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#16181d; --panel:#1f232a; --ink:#e6e8eb; --muted:#9aa3ad; --line:#2d333c;
-  --light:#cdbb9a; --dark:#86664a; --accent:#60a5fa;
+  --light:#eeeed2; --dark:#769656; --accent:#60a5fa;
 }}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -33,9 +34,7 @@ h1{font-size:20px;margin:0 0 4px}
 .sq{position:relative;display:flex;align-items:center;justify-content:center}
 .sq.l{background:var(--light)} .sq.d{background:var(--dark)}
 .sq .hl{position:absolute;inset:0;opacity:.45}
-.pc{position:relative;font-size:min(9vw,52px);line-height:1;font-family:"Segoe UI Symbol","DejaVu Sans","Noto Sans Symbols 2",serif}
-.pc.w{color:#fff;text-shadow:0 0 1px #000,0 0 1px #000,1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000}
-.pc.b{color:#111;text-shadow:0 0 1px #fff4}
+.cg-wrap piece{position:absolute;inset:0;background-size:cover;background-repeat:no-repeat;z-index:1}
 .coord{position:absolute;font-size:10px;font-weight:700;opacity:.7}
 .coord.f{right:3px;bottom:1px} .coord.r{left:3px;top:1px}
 .badge{position:absolute;top:-2px;right:-2px;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px #0006;z-index:3}
@@ -102,7 +101,7 @@ const CLS = {
 };
 const ORDER = ['brilliant','great','best','excellent','good','book','forced','inaccuracy','mistake','blunder'];
 const VAL = {p:1,n:3,b:3,r:5,q:9,k:100};
-const GLYPH = {k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
+const PIECE = {k:'king',q:'queen',r:'rook',b:'bishop',n:'knight',p:'pawn'};
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const getJSON = async url => { const r = await fetch(url); if (!r.ok) throw new Error(`chess.com API ${r.status} for ${url}`); return r.json(); };
 
@@ -287,7 +286,7 @@ async function review(){
   <div class="grid">
     <div>
       <div class="players"><span id="topName"></span><span class="acc" id="topAcc"></span></div>
-      <div class="boardrow"><div class="evalbar ${flipped ? 'flip' : ''}" id="evalbar"><div class="w"></div><span id="evtxt"></span></div><div class="board" id="board"></div></div>
+      <div class="boardrow"><div class="evalbar ${flipped ? 'flip' : ''}" id="evalbar"><div class="w"></div><span id="evtxt"></span></div><div class="board cg-wrap" id="board"></div></div>
       <div class="players"><span id="botName"></span><span class="acc" id="botAcc"></span></div>
       <div class="nav"><button data-n="first">⏮</button><button data-n="prev">◀</button><button data-n="next">▶</button><button data-n="last">⏭</button></div>
       <svg class="graph" id="graph" preserveAspectRatio="none"></svg>
@@ -356,7 +355,7 @@ async function review(){
       const light = (row + col) % 2 === 0;
       let inner = '';
       if (last && (sq === last.from || sq === last.to)) inner += `<div class="hl" style="background:${CLS[r.cls].color}"></div>`;
-      if (cell) inner += `<span class="pc ${cell.color}">${GLYPH[cell.type]}&#xFE0E;</span>`;
+      if (cell) inner += `<piece class="${PIECE[cell.type]} ${cell.color === 'w' ? 'white' : 'black'}"></piece>`;
       if (last && sq === last.to) inner += `<span class="badge" style="background:${CLS[r.cls].color}">${CLS[r.cls].sym}</span>`;
       if (dr === 7) inner += `<span class="coord f" style="color:${light ? 'var(--dark)' : 'var(--light)'}">${'abcdefgh'[col]}</span>`;
       if (dc === 0) inner += `<span class="coord r" style="color:${light ? 'var(--dark)' : 'var(--light)'}">${8 - row}</span>`;
