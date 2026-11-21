@@ -2,35 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Game Review</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessground@9.1.1/assets/chessground.cburnett.css">
 <style>
 :root{
-  --bg:#f4f1ea; --panel:#ffffff; --ink:#1f2328; --muted:#6b7280; --line:#e5e1d8;
+  --bg:#f4f1ea; --panel:#ffffff; --ink:#1f2328; --muted:#6b7280; --line:#e5e1d8; --note:#f7f5f0;
   --light:#eeeed2; --dark:#769656; --accent:#2563eb;
   --c-brilliant:#0ea5a4; --c-great:#3b82f6; --c-best:#16a34a; --c-excellent:#65a30d;
-  --c-good:#84a98c; --c-inaccuracy:#eab308; --c-mistake:#f97316; --c-blunder:#dc2626; --c-forced:#94a3b8; --c-book:#a47551;
+  --c-good:#84a98c; --c-inaccuracy:#eab308; --c-mistake:#f97316; --c-blunder:#dc2626; --c-forced:#94a3b8; --c-book:#a47551; --c-pending:#9ca3af;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#16181d; --panel:#1f232a; --ink:#e6e8eb; --muted:#9aa3ad; --line:#2d333c;
+  --bg:#16181d; --panel:#1f232a; --ink:#e6e8eb; --muted:#9aa3ad; --line:#2d333c; --note:#252a32;
   --light:#eeeed2; --dark:#769656; --accent:#60a5fa;
 }}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
 a{color:var(--accent)}
-.wrap{max-width:1100px;margin:0 auto;padding:16px}
-h1{font-size:20px;margin:0 0 4px}
-.sub{color:var(--muted);font-size:14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+button{font:inherit;color:inherit}
+.wrap{max-width:1100px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+h1{font-size:20px;margin:0 0 4px;overflow-wrap:anywhere}
+.sub{color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
 .grid{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:16px;margin-top:14px;align-items:start}
-@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.col{min-width:0}
 .boardrow{display:flex;gap:8px}
 .evalbar{width:22px;border-radius:6px;overflow:hidden;background:#333;position:relative;flex:none}
 .evalbar .w{position:absolute;bottom:0;left:0;right:0;background:#f5f5f5;transition:height .25s}
 .evalbar.flip .w{bottom:auto;top:0}
 .evalbar span{position:absolute;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:#777}
-.board{position:relative;flex:1;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);border-radius:6px;overflow:hidden;user-select:none}
+.board{position:relative;flex:1;min-width:0;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:6px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:pan-y}
 .sq{position:relative;display:flex;align-items:center;justify-content:center}
 .sq.l{background:var(--light)} .sq.d{background:var(--dark)}
 .sq .hl{position:absolute;inset:0;opacity:.45}
@@ -38,34 +40,52 @@ h1{font-size:20px;margin:0 0 4px}
 .coord{position:absolute;font-size:10px;font-weight:700;opacity:.7}
 .coord.f{right:3px;bottom:1px} .coord.r{left:3px;top:1px}
 .badge{position:absolute;top:-2px;right:-2px;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px #0006;z-index:3}
-svg.arrows{position:absolute;inset:0;pointer-events:none;z-index:2}
-.players{display:flex;justify-content:space-between;align-items:center;margin:6px 0;font-weight:600}
-.players .acc{font-size:13px;padding:2px 8px;border-radius:6px;background:var(--line)}
+svg.arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.players{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;font-weight:600;min-width:0}
+.players span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.players .acc{flex:none;font-size:13px;padding:2px 8px;border-radius:6px;background:var(--line)}
 .nav{display:flex;gap:6px;margin-top:10px}
-.nav button,.btn{flex:1;padding:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;font-size:16px;cursor:pointer}
+.nav button,.btn{flex:1;min-height:48px;padding:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;font-size:18px;cursor:pointer;touch-action:manipulation}
 .nav button:hover,.btn:hover{border-color:var(--accent)}
-.coach{display:flex;gap:10px;align-items:flex-start;min-height:64px}
+.nav button:active{background:var(--line)}
+.status{margin-top:10px;font-size:13px;color:var(--muted)}
+.status .bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:4px}
+.status .bar div{height:100%;background:var(--accent);width:0;transition:width .2s}
+.coach{display:flex;gap:10px;align-items:flex-start;min-height:120px}
 .coach .icon{flex:none;width:34px;height:34px;border-radius:50%;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
 .coach b{font-size:16px}
-.moves{max-height:300px;overflow:auto;margin-top:10px;border-top:1px solid var(--line);padding-top:6px;font-variant-numeric:tabular-nums}
-.mrow{display:grid;grid-template-columns:36px 1fr 1fr;gap:4px}
-.mv{padding:3px 6px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px}
-.mv:hover{background:var(--line)} .mv.cur{outline:2px solid var(--accent)}
-.dot{width:16px;height:16px;border-radius:50%;color:#fff;font-size:9px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex:none}
-.num{color:var(--muted);padding:3px 0}
+.coach .expl{margin:4px 0 6px}
+.moves{position:relative;max-height:440px;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;margin-top:10px;border-top:1px solid var(--line);padding-top:6px;font-variant-numeric:tabular-nums}
+.mrow{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr);gap:4px}
+.mv{min-height:44px;padding:4px 6px;border:0;background:none;text-align:left;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:0;touch-action:manipulation}
+.mv:hover{background:var(--line)} .mv.cur{outline:2px solid var(--accent);outline-offset:-2px;background:var(--note)}
+.dot{width:18px;height:18px;border-radius:50%;color:#fff;font-size:9px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.num{color:var(--muted);display:flex;align-items:center}
+.note{margin:0 0 6px 38px;padding:6px 9px;border-left:3px solid var(--c-pending);background:var(--note);border-radius:0 6px 6px 0;font-size:13px;line-height:1.4;cursor:pointer}
+.note[hidden]{display:none}
+.note b{white-space:nowrap}
+.note.cur{outline:2px solid var(--accent);outline-offset:-2px}
 table.sum{width:100%;border-collapse:collapse;font-size:14px}
 table.sum td{padding:4px 6px;border-top:1px solid var(--line)}
 table.sum td:nth-child(1),table.sum td:nth-child(3){text-align:center;font-weight:700;width:60px}
 table.sum tr.accrow td{font-size:20px;border-top:none}
 .graph{width:100%;height:90px;display:block;cursor:pointer;border-radius:6px;margin-top:10px;background:#3a3a3a}
-.progress{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:12px 0}
-.progress div{height:100%;background:var(--accent);width:0;transition:width .2s}
 .stack>*+*{margin-top:12px}
-.keys li{cursor:pointer;margin:4px 0}
-.gamelist a{display:flex;justify-content:space-between;padding:10px;border-top:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.keys{padding-left:0;list-style:none;margin:6px 0 0}
+.keys li{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:6px;border-top:1px solid var(--line)}
+.gamelist a{display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:48px;padding:10px 12px;border-top:1px solid var(--line);text-decoration:none;color:var(--ink)}
 .gamelist a:hover{background:var(--line)}
 .w-win{color:var(--c-best);font-weight:700} .w-loss{color:var(--c-blunder);font-weight:700} .w-draw{color:var(--muted);font-weight:700}
-select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px}
+select,input{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:16px;min-height:44px}
+@media (max-width:860px){
+  .grid{display:flex;flex-direction:column;align-items:stretch;gap:0}
+  .col{display:contents}
+  .stack>*+*{margin-top:0}
+  .o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6;margin-top:10px}
+  .o7{order:7}.o8{order:8;margin-top:12px}.o9{order:9;margin-top:12px}.o10{order:10;margin-top:12px}.o11{order:11;margin-top:12px}
+  .coach{min-height:140px}
+  .moves{max-height:min(60vh,560px)}
+}
 </style>
 </head>
 <body>
@@ -85,21 +105,27 @@ const qs = new URLSearchParams(location.search);
 const USER = (qs.get('user') || '').toLowerCase();
 const GAME_ID = qs.get('id');
 const MONTH = qs.get('month');
-let DEPTH = +(qs.get('depth') || 14);
+// Phones and small screens default to a lighter depth so the review fills in quickly.
+const SMALL = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || Math.min(window.innerWidth, screen.width || 9999) < 700;
+const EXPLICIT_DEPTH = qs.has('depth');
+let DEPTH = +(qs.get('depth') || (SMALL ? 12 : 14));
+const PV_LEN = 10;
 
 const CLS = {
-  brilliant: {sym:'!!', label:'Brilliant', color:'var(--c-brilliant)'},
-  great:     {sym:'!',  label:'Great move', color:'var(--c-great)'},
-  best:      {sym:'★',  label:'Best move', color:'var(--c-best)'},
-  excellent: {sym:'✓',  label:'Excellent', color:'var(--c-excellent)'},
-  good:      {sym:'✓',  label:'Good', color:'var(--c-good)'},
-  book:      {sym:'📖', label:'Book', color:'var(--c-book)'},
-  forced:    {sym:'□',  label:'Forced', color:'var(--c-forced)'},
-  inaccuracy:{sym:'?!', label:'Inaccuracy', color:'var(--c-inaccuracy)'},
-  mistake:   {sym:'?',  label:'Mistake', color:'var(--c-mistake)'},
-  blunder:   {sym:'??', label:'Blunder', color:'var(--c-blunder)'},
+  brilliant: {sym:'!!', label:'Brilliant', color:'var(--c-brilliant)', say:'brilliant'},
+  great:     {sym:'!',  label:'Great move', color:'var(--c-great)', say:'a great move'},
+  best:      {sym:'★',  label:'Best move', color:'var(--c-best)', say:'the best move'},
+  excellent: {sym:'✓',  label:'Excellent', color:'var(--c-excellent)', say:'an excellent move'},
+  good:      {sym:'✓',  label:'Good', color:'var(--c-good)', say:'a good move'},
+  book:      {sym:'📖', label:'Book', color:'var(--c-book)', say:'a book move'},
+  forced:    {sym:'□',  label:'Forced', color:'var(--c-forced)', say:'forced'},
+  inaccuracy:{sym:'?!', label:'Inaccuracy', color:'var(--c-inaccuracy)', say:'an inaccuracy'},
+  mistake:   {sym:'?',  label:'Mistake', color:'var(--c-mistake)', say:'a mistake'},
+  blunder:   {sym:'??', label:'Blunder', color:'var(--c-blunder)', say:'a blunder'},
 };
 const ORDER = ['brilliant','great','best','excellent','good','book','forced','inaccuracy','mistake','blunder'];
+const NOTABLE = ['brilliant','great','inaccuracy','mistake','blunder'];
+const BAD = ['inaccuracy','mistake','blunder'];
 const VAL = {p:1,n:3,b:3,r:5,q:9,k:100};
 const PIECE = {k:'king',q:'queen',r:'rook',b:'bishop',n:'knight',p:'pawn'};
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -116,9 +142,16 @@ class Engine {
   send(c){ this.w.postMessage(c); }
   waitFor(pred){ return new Promise(res => { const f = l => { if (pred(l)) { this.subs = this.subs.filter(x => x !== f); res(l); } }; this.subs.push(f); }); }
   async init(){
-    this.send('uci'); await this.waitFor(l => l === 'uciok');
-    this.send('setoption name MultiPV value 2');
-    this.send('isready'); await this.waitFor(l => l === 'readyok');
+    const boot = (async () => {
+      this.send('uci'); await this.waitFor(l => l === 'uciok');
+      this.send('setoption name MultiPV value 2');
+      this.send('isready'); await this.waitFor(l => l === 'readyok');
+    })();
+    const fail = new Promise((_, rej) => {
+      this.w.onerror = e => rej(new Error(e.message || 'the engine worker could not load'));
+      setTimeout(() => rej(new Error('the engine did not start within 30 seconds')), 30000);
+    });
+    await Promise.race([boot, fail]);
   }
   async analyse(fen, depth){
     const lines = {};
@@ -168,57 +201,139 @@ function buildPositions(pgn){
   const start = hdr.SetUp === '1' && hdr.FEN ? hdr.FEN : undefined;
   const moves = src.history({verbose:true});
   const c = start ? new Chess(start) : new Chess();
-  const fens = [c.fen()], meta = [{checkmate:c.isCheckmate(), draw:c.isDraw(), legal:c.moves().length}];
-  for (const m of moves) { c.move(m.san); fens.push(c.fen()); meta.push({checkmate:c.isCheckmate(), draw:c.isDraw()||c.isStalemate(), legal:c.moves().length}); }
+  const fens = [c.fen()], meta = [{checkmate:c.isCheckmate(), draw:c.isDraw(), legal:c.moves().length, check:c.inCheck()}];
+  for (const m of moves) { c.move(m.san); fens.push(c.fen()); meta.push({checkmate:c.isCheckmate(), draw:c.isDraw()||c.isStalemate(), legal:c.moves().length, check:c.inCheck()}); }
   return {moves, fens, meta};
 }
 
-async function analyseAll(fens, meta, onProgress){
-  const key = `rv:${GAME_ID}:${DEPTH}`;
-  try { const c = JSON.parse(localStorage.getItem(key)); if (c && c.length === fens.length) return c; } catch {}
-  const eng = new Engine(); await eng.init();
-  const out = [];
-  for (let i = 0; i < fens.length; i++) {
-    const stm = fens[i].split(' ')[1];
-    if (meta[i].checkmate) out.push({win: stm === 'w' ? 0 : 100, text:'#', lines:[]});
-    else if (meta[i].draw) out.push({win:50, text:'½', lines:[]});
-    else {
-      const raw = await eng.analyse(fens[i], DEPTH);
-      const lines = raw.map(l => ({uci:l.pv[0], pv:l.pv.slice(0,6), ...toWhite(l, stm)}));
-      out.push({win:lines[0].win, text:lines[0].text, lines});
-    }
-    onProgress(i + 1, fens.length);
+/* ---------- chess helpers ---------- */
+const other = c => c === 'w' ? 'b' : 'w';
+const colorName = c => c === 'w' ? 'White' : 'Black';
+const uciObj = u => ({from:u.slice(0,2), to:u.slice(2,4), promotion:u[4]});
+function tryMove(c, u){ try { return c.move(uciObj(u)); } catch { return null; } }
+function uciToSan(fen, uci){ const m = tryMove(new Chess(fen), uci); return m ? m.san : uci; }
+function pvSan(fen, pv, n = 5){
+  const c = new Chess(fen), out = [];
+  for (const u of pv.slice(0, n)) { const m = tryMove(c, u); if (!m) break; out.push(m.san); }
+  return out.join(' ');
+}
+// material balance from `color`'s point of view (kings ignored)
+function matDiff(c, color){
+  let d = 0;
+  for (const row of c.board()) for (const p of row) if (p && p.type !== 'k') d += (p.color === color ? 1 : -1) * VAL[p.type];
+  return d;
+}
+// play a line and return the white-POV material at its end; if the line stops right after a capture
+// that can simply be taken back, count the recapture so a truncated line doesn't overstate a gain
+function settle(fen, ucis, max = 8){
+  const c = new Chess(fen), took = {w:[], b:[]};
+  let last = null, n = 0, upto = 0;
+  for (const u of ucis.slice(0, max)) { const m = tryMove(c, u); if (!m) break; last = m; n++; if (m.captured) { took[m.color].push(m.captured); upto = n; } }
+  let d = matDiff(c, 'w');
+  if (last && last.captured && !c.isGameOver() && c.moves({verbose:true}).some(x => x.to === last.to)) {
+    const v = last.promotion || last.piece;
+    d += (last.color === 'w' ? -1 : 1) * VAL[v];
+    took[c.turn()].push(v);
   }
-  eng.w.terminate();
-  try { localStorage.setItem(key, JSON.stringify(out)); } catch {}
-  return out;
+  return {d, took, upto: Math.max(2, upto)};
+}
+// pieces of `color` that can be taken for free or by something cheaper
+function loosePieces(c, color){
+  const en = other(color), out = [];
+  for (const row of c.board()) for (const p of row) {
+    if (!p || p.color !== color || p.type === 'k') continue;
+    const att = c.attackers(p.square, en);
+    if (!att.length) continue;
+    const def = c.attackers(p.square, color);
+    const minAtt = Math.min(...att.map(s => VAL[c.get(s).type]));
+    if (!def.length || minAtt < VAL[p.type]) out.push({sq:p.square, type:p.type});
+  }
+  return out.sort((a, b) => VAL[b.type] - VAL[a.type]);
+}
+// enemy pieces the piece on `sq` attacks that are worth attacking (the king, something more valuable, or undefended)
+function threats(c, sq){
+  const me = c.get(sq); if (!me) return [];
+  const en = other(me.color), out = [];
+  for (const row of c.board()) for (const p of row) {
+    if (!p || p.color !== en || p.type === 'p') continue;
+    if (!c.attackers(p.square, me.color).includes(sq)) continue;
+    if (p.type === 'k' || VAL[p.type] > VAL[me.type] || !c.attackers(p.square, en).length) out.push(p);
+  }
+  return out.sort((a, b) => VAL[b.type] - VAL[a.type]);
+}
+function joinP(ph){
+  if (ph.length <= 1) return ph.join('');
+  return ph.slice(0, -1).join(', ') + ' and ' + ph[ph.length - 1];
+}
+function standing(w){ return w >= 90 ? 'winning' : w >= 70 ? 'clearly better' : w >= 58 ? 'slightly better' : w > 42 ? 'about equal' : w > 30 ? 'slightly worse' : w > 10 ? 'clearly worse' : 'losing'; }
+function keepPhrase(C, w){
+  if (w > 42 && w < 58) return 'keeps the balance';
+  if (w >= 58) return `keeps ${C} ${standing(w)}`;
+  return `is the toughest defense, though ${C} is still ${standing(w)}`;
+}
+function gainPhrase(net, took){
+  const has = t => took.includes(t);
+  if (net >= 8 && has('q')) return 'wins the queen';
+  if (net >= 4 && has('q')) return 'comes out well ahead, picking up the queen';
+  if (net >= 5 && has('r')) return 'wins a rook';
+  if (net >= 5) return 'wins a lot of material';
+  if (net >= 3) { const t = ['b','n'].find(has); return t ? `wins a ${PIECE[t]}` : 'wins a piece'; }
+  if (net >= 2) return has('r') ? 'wins the exchange' : took.every(t => t === 'p') ? 'wins two pawns' : 'wins material';
+  if (net >= 1) return 'wins a pawn';
+  return '';
+}
+// what a move does, as short verb phrases ("takes the knight on e5", "forks the king and the rook")
+function describeMove(mv, prev, ply){
+  if (!mv) return [];
+  const c = new Chess(mv.after), before = new Chess(mv.before), me = mv.color;
+  if (c.isCheckmate()) return ['delivers checkmate'];
+  const ph = [];
+  if (mv.flags.includes('k') || mv.flags.includes('q')) ph.push(`castles ${mv.flags.includes('k') ? 'kingside' : 'queenside'}, tucking the king away`);
+  if (mv.promotion) ph.push(`promotes to a ${PIECE[mv.promotion]}`);
+  if (mv.captured) {
+    if (prev && prev.captured && prev.to === mv.to) ph.push(`recaptures the ${PIECE[mv.captured]}`);
+    else if (mv.flags.includes('e')) ph.push('captures en passant');
+    else ph.push(`takes the ${PIECE[mv.captured]} on ${mv.to}`);
+  }
+  const t = threats(c, mv.to);
+  if (t.length >= 2) ph.push(`forks the ${t[0].type === 'k' ? 'king' : `${PIECE[t[0].type]} on ${t[0].square}`} and the ${PIECE[t[1].type]} on ${t[1].square}`);
+  else if (t.length === 1 && t[0].type !== 'k') ph.push(`attacks the ${PIECE[t[0].type]} on ${t[0].square}`);
+  if (c.inCheck() && !(t.length >= 2 && t[0].type === 'k')) ph.push('gives check');
+  if (ph.length < 2 && !mv.captured) {
+    const wasLoose = loosePieces(before, me), nowLoose = loosePieces(c, me).map(p => p.sq);
+    if (wasLoose.some(p => p.sq === mv.from) && !nowLoose.includes(mv.to)) ph.push(`moves the ${PIECE[mv.piece]} out of danger`);
+    else {
+      const saved = wasLoose.find(p => p.sq !== mv.from && !nowLoose.includes(p.sq) && c.get(p.sq)?.type === p.type);
+      if (saved) ph.push(`protects the ${PIECE[saved.type]} on ${saved.sq}`);
+    }
+  }
+  if (ph.length < 2 && ply < 30 && 'nb'.includes(mv.piece) && mv.from[1] === (me === 'w' ? '1' : '8')) ph.push(`develops the ${PIECE[mv.piece]}`);
+  if (ph.length < 2 && ply < 20 && mv.piece === 'p' && ['d4','e4','d5','e5'].includes(mv.to)) ph.push('stakes a claim in the center');
+  if (ph.length < 2 && mv.piece === 'p' && !mv.promotion && mv.to[1] === (me === 'w' ? '7' : '2')) ph.push('pushes the pawn to the brink of promotion');
+  return ph.slice(0, 2);
 }
 
-function uciToSan(fen, uci){
-  try { const c = new Chess(fen); return c.move({from:uci.slice(0,2), to:uci.slice(2,4), promotion:uci[4]}).san; } catch { return uci; }
-}
-
-function classify(moves, fens, meta, A){
-  return moves.map((m, i) => {
-    const pov = x => m.color === 'w' ? x : 100 - x;
-    const before = pov(A[i].win), after = pov(A[i+1].win);
-    const loss = Math.max(0, before - after);
-    const played = m.from + m.to + (m.promotion || '');
-    const [l1, l2] = A[i].lines;
-    const isBest = l1 && played === l1.uci;
-    let cls;
-    if (meta[i].legal === 1) cls = 'forced';
-    else if ((i < 8 && loss < 20) || (i < 16 && loss < 8 && Math.abs(A[i+1].win - 50) < 15)) cls = 'book';
-    else if (loss < 2 && isSacrifice(m, fens[i+1]) && after >= 50 && before < 90) cls = 'brilliant';
-    else if (isBest && l2 && pov(l1.win) - pov(l2.win) >= 15 && before < 95 && !(m.captured && moves[i-1]?.to === m.to)) cls = 'great';
-    else if (isBest || loss < 1) cls = 'best';
-    else if (loss < 3) cls = 'excellent';
-    else if (loss < 6) cls = 'good';
-    else if (loss < 12) cls = 'inaccuracy';
-    else if (loss < 22) cls = 'mistake';
-    else cls = 'blunder';
-    return {cls, loss, acc: moveAcc(loss), best: l1 ? uciToSan(fens[i], l1.uci) : null, bestUci: l1?.uci, isBest};
-  });
+/* ---------- classification ---------- */
+function classifyMove(i, moves, fens, meta, A){
+  const m = moves[i];
+  const pov = x => m.color === 'w' ? x : 100 - x;
+  const before = pov(A[i].win), after = pov(A[i+1].win);
+  const loss = Math.max(0, before - after);
+  const played = m.from + m.to + (m.promotion || '');
+  const [l1, l2] = A[i].lines;
+  const isBest = !!l1 && played === l1.uci;
+  let cls;
+  if (meta[i].legal === 1) cls = 'forced';
+  else if ((i < 8 && loss < 20) || (i < 16 && loss < 8 && Math.abs(A[i+1].win - 50) < 15)) cls = 'book';
+  else if (loss < 2 && isSacrifice(m, fens[i+1]) && after >= 50 && before < 90) cls = 'brilliant';
+  else if (isBest && l2 && pov(l1.win) - pov(l2.win) >= 15 && before < 95 && !(m.captured && moves[i-1]?.to === m.to)) cls = 'great';
+  else if (isBest || loss < 1) cls = 'best';
+  else if (loss < 3) cls = 'excellent';
+  else if (loss < 6) cls = 'good';
+  else if (loss < 12) cls = 'inaccuracy';
+  else if (loss < 22) cls = 'mistake';
+  else cls = 'blunder';
+  return {cls, loss, acc: moveAcc(loss), best: l1 ? uciToSan(fens[i], l1.uci) : null, bestUci: l1?.uci, isBest};
 }
 // heuristic: a non-pawn piece lands where a cheaper enemy piece can take it, and it wasn't simply a trade
 function isSacrifice(m, fenAfter){
@@ -230,11 +345,134 @@ function isSacrifice(m, fenAfter){
 }
 
 function accuracy(rs, color, moves){
-  const a = rs.filter((r, i) => moves[i].color === color).map(r => r.acc);
+  const a = rs.filter((r, i) => r && moves[i].color === color).map(r => r.acc);
   if (!a.length) return 0;
   const mean = a.reduce((x, y) => x + y, 0) / a.length;
   const harm = a.length / a.reduce((x, y) => x + 1 / Math.max(y, 5), 0);
   return (mean + harm) / 2;
+}
+
+/* ---------- move explanations ---------- */
+// Builds 1-3 plain-language sentences for move i from the engine lines and simple board facts.
+function explainMove(i, ctx){
+  const {moves, fens, meta, A, R, opening} = ctx;
+  const m = moves[i], r = R[i], me = m.color, en = other(me);
+  const C = colorName(me), O = colorName(en);
+  const pov = w => me === 'w' ? w : 100 - w;
+  const mateFor = l => l && l.mate != null ? (me === 'w' ? l.mate : -l.mate) : null; // >0: mover mates
+  const B = A[i], Af = A[i+1];
+  const l1 = B.lines[0], l2 = B.lines[1], reply = Af.lines[0];
+  const prev = moves[i-1] || null;
+  const did = describeMove(m, prev, i);
+  const doesS = did.length ? `${m.san} ${joinP(did)}.` : '';
+  const winB = pov(B.win), winA = pov(Af.win);
+  const played = m.from + m.to + (m.promotion || '');
+  const bestMv = l1 ? tryMove(new Chess(fens[i]), l1.uci) : null;
+  const bestSan = bestMv?.san || r.best;
+  const replyMv = reply ? tryMove(new Chess(fens[i+1]), reply.uci) : null;
+  const m0 = matDiff(new Chess(fens[i]), me);
+  const mpov = d => me === 'w' ? d : -d;
+  const ref = settle(fens[i], [played, ...(reply?.pv || [])], 9);
+  const refLoss = m0 - mpov(ref.d);                 // material the mover ends up losing after the played move
+  const bst = l1 ? settle(fens[i], l1.pv, 8) : null;
+  const bestLine = () => pvSan(fens[i], l1.pv, Math.min(8, bst.upto));
+  const bestGain = bst ? mpov(bst.d) - m0 : 0;      // material the best line wins (negative = it also loses some)
+  const mA = mateFor(reply), mB = mateFor(l1);
+  const S = [];
+  let note = '';
+
+  if (meta[i+1].checkmate) {
+    S.push(`${m.san} is checkmate. Game over.`);
+    return {text:S.join(' '), note:S[0]};
+  }
+
+  switch (r.cls) {
+    case 'book':
+      S.push(doesS || `${m.san} is a well-known opening move.`);
+      S.push(`This is standard opening play${opening ? ` in the ${opening}` : ''}.`);
+      break;
+    case 'forced':
+      S.push(`${m.san} was the only legal move${meta[i].check ? ' to get out of check' : ''}.`);
+      break;
+    case 'best': case 'great': case 'brilliant': case 'excellent': case 'good': {
+      if (r.cls === 'brilliant') {
+        const c = new Chess(fens[i+1]);
+        const att = c.attackers(m.to, en).map(s => c.get(s).type).sort((a, b) => VAL[a] - VAL[b])[0];
+        S.push(`${m.san} puts the ${PIECE[m.piece]} where ${att ? `the ${PIECE[att]}` : `${O}`} can take it, a real sacrifice.`);
+        S.push(`Taking it doesn't pay off for ${O}: the engine still has ${C} ${standing(winA)} (${Af.text}).`);
+        break;
+      }
+      S.push(doesS || (r.cls === 'best' || r.cls === 'great' ? `${m.san} is exactly what the position needed.` : `${m.san} is a sensible move.`));
+      if (r.cls === 'great') {
+        if (l2) {
+          const m2 = mateFor(l2), w2 = pov(l2.win);
+          const conseq = m2 != null && m2 < 0 ? 'walks into a forced mate'
+            : (w2 <= 42 && winA > 42) || (w2 < 58 && winA >= 58) ? `would have left ${C} ${standing(w2)}`
+            : `would have dropped the evaluation to ${l2.text}`;
+          S.push(`It was the only move that ${winA >= 70 ? 'keeps the advantage' : 'holds the position'}: the next best option, ${uciToSan(fens[i], l2.uci)}, ${conseq}.`);
+        } else S.push('It was the only good move here.');
+      } else if (r.cls === 'best') {
+        if (mA != null && mA > 0) S.push(`It keeps a forced mate in ${mA} on track.`);
+        else if (r.isBest && bestGain >= 1 && !m.captured) S.push(`Followed up correctly, it ${gainPhrase(bestGain, bst.took[me])} (${bestLine()}).`);
+        else if (!r.isBest && bestSan) S.push(`It's just as good as the engine's first choice, ${bestSan}, and ${keepPhrase(C, winA)}.`);
+        else S.push(`It's the engine's top choice and ${keepPhrase(C, winA)}.`);
+      } else if (r.cls === 'excellent') {
+        S.push(`Nearly as strong as the engine's top pick, ${bestSan}.`);
+      } else {
+        const extra = bestGain >= 1 && mpov(bst.d) - mpov(ref.d) >= 1 ? `, which ${gainPhrase(bestGain, bst.took[me])}` : '';
+        S.push(`${bestSan} was a bit more precise${extra}.`);
+      }
+      break;
+    }
+    default: { // inaccuracy / mistake / blunder
+      let generic = false;
+      if (mA != null && mA < 0 && !(mB != null && mB < 0)) {
+        S.push(`${m.san} allows a forced mate in ${-mA}${replyMv ? `, starting with ${replyMv.san}` : ''}.`);
+      } else if (mB != null && mB > 0 && !(mA != null && mA > 0)) {
+        S.push(`${m.san} lets a forced mate slip away.`);
+      } else if (refLoss >= 1 && (!bst || refLoss > m0 - mpov(bst.d))) {
+        const loose = loosePieces(new Chess(fens[i+1]), me);
+        const hung = replyMv?.captured && loose.find(p => p.sq === replyMv.to && VAL[p.type] >= refLoss - 0.5);
+        const gain = gainPhrase(refLoss, ref.took[en]);
+        if (hung) S.push(`${m.san} leaves the ${PIECE[hung.type]} on ${hung.sq} unprotected, and ${O} can grab it with ${replyMv.san}.`);
+        else {
+          const tac = describeMove(replyMv, m, i + 1).find(p => /^forks|^attacks|^gives check/.test(p));
+          S.push(`${m.san} allows ${replyMv ? replyMv.san : 'a strong reply'}${tac ? `, which ${tac},` : ''} and ${O} ${gain}.`);
+        }
+      } else if (bst && bestGain >= 1 && mpov(bst.d) - mpov(ref.d) >= 1) {
+        S.push(`${m.san} misses a chance to win material.`);
+      } else {
+        generic = true;
+        const rd = describeMove(replyMv, m, i + 1).filter(p => !/^develops|^stakes/.test(p));
+        const cpB = l1?.cp, cpA = reply?.cp;
+        if (rd.length && replyMv) S.push(`After ${m.san}, ${O} gets ${replyMv.san}, which ${joinP(rd)}.`);
+        else if (cpB != null && cpA != null) {
+          const drop = (mpov(cpB) - mpov(cpA)) / 100;
+          S.push(`${m.san} gives away about ${drop.toFixed(1)} pawn${Math.abs(drop - 1) < .05 ? '' : 's'} of evaluation without a concrete gain.`);
+        } else S.push(`${m.san} lets ${O} improve the position.`);
+      }
+      // the better move and its idea
+      const ideas = [];
+      let showLine = false;
+      if (mB != null && mB > 0) { ideas.push(`forces mate in ${mB}`); showLine = true; }
+      else {
+        const bd = describeMove(bestMv, prev, i);
+        const gainS = bst && bestGain >= 1 && mpov(bst.d) - mpov(ref.d) >= 1 ? gainPhrase(bestGain, bst.took[me]) : '';
+        ideas.push(...(gainS ? bd.filter(p => !/^takes|^recaptures/.test(p)) : bd).slice(0, 2));
+        if (mA != null && mA < 0) ideas.push('keeps the king out of the mating net');
+        if (gainS) { ideas.push(gainS); showLine = true; }
+        else if (refLoss >= 1 && bst && m0 - mpov(bst.d) < refLoss) ideas.push('keeps the material level');
+      }
+      const tail = ideas.length ? `, which ${joinP(ideas.slice(0, 3))}` : `, which ${keepPhrase(C, pov(l1?.win ?? B.win))}`;
+      const bestS = bestSan ? `Better was ${bestSan}${tail}` : '';
+      if (bestS) S.push(bestS + (showLine && l1 ? ` (${mB != null && mB > 0 ? pvSan(fens[i], l1.pv, 2 * mB - 1) : bestLine()}).` : '.'));
+      const sa = standing(winB), sb = standing(winA);
+      if (r.cls !== 'inaccuracy' && sa !== sb && S.length < 3) S.push(`${C} goes from ${sa} to ${sb}.`);
+      else if (generic && sa !== sb && S.length < 3) S.push(`${C} goes from ${sa} to ${sb}.`);
+      note = S[0] + (bestS ? ' ' + bestS + '.' : '');
+    }
+  }
+  return {text:S.join(' '), note: note || S.slice(0, 2).join(' ')};
 }
 
 /* ---------- views ---------- */
@@ -267,75 +505,120 @@ async function review(){
   const me = flipped ? g.black : g.white, op = flipped ? g.white : g.black;
   const res = resultFor(me, op);
   const {moves, fens, meta} = buildPositions(g.pgn);
+  const opening = g.eco ? decodeURIComponent(g.eco.split('/').pop()).replace(/-/g, ' ') : '';
   document.title = `Review: ${g.white.username} vs ${g.black.username}`;
 
-  app.innerHTML = `<h1>${esc(g.white.username)} (${g.white.rating}) vs ${esc(g.black.username)} (${g.black.rating})</h1>
-    <div class="sub">${esc(res.text)} · ${esc(g.time_class)} · ${new Date(g.end_time*1000).toLocaleString()} · <a href="${esc(g.url)}" target="_blank" rel="noopener">open on chess.com</a></div>
-    <div class="card" style="margin-top:14px"><b>Analyzing with Stockfish (depth ${DEPTH})…</b> <span id="pt"></span><div class="progress"><div id="pb"></div></div><div class="sub">Runs in your browser. Takes about a minute; results are saved, so reopening is instant.</div></div>`;
-  const A = await analyseAll(fens, meta, (d, t) => { document.getElementById('pb').style.width = (100*d/t) + '%'; document.getElementById('pt').textContent = `${d}/${t}`; });
-  const R = classify(moves, fens, meta, A);
-  const accW = accuracy(R, 'w', moves), accB = accuracy(R, 'b', moves);
+  // ---- analysis state; filled incrementally ----
+  const A = new Array(fens.length).fill(null);   // engine eval per position
+  const R = new Array(moves.length).fill(null);  // classification per move
+  const X = new Array(moves.length).fill(null);  // explanation per move
+  const keyFor = d => `rv:${GAME_ID}:${d}`;
+  const readCache = d => { try { const c = JSON.parse(localStorage.getItem(keyFor(d))); return Array.isArray(c) && c.length === fens.length ? c : null; } catch { return null; } };
+  let cached = readCache(DEPTH);
+  if (!EXPLICIT_DEPTH && !(cached && cached.every(Boolean))) {
+    // reuse a finished deeper analysis if one exists (e.g. opened on a laptop before)
+    for (const d of [20,18,16,14]) { if (d <= DEPTH) continue; const h = readCache(d); if (h && h.every(Boolean)) { DEPTH = d; cached = h; break; } }
+  }
+  if (cached) cached.forEach((a, i) => { if (a && typeof a.win === 'number' && Array.isArray(a.lines)) A[i] = a; });
+  fens.forEach((f, i) => {
+    if (A[i]) return;
+    const stm = f.split(' ')[1];
+    if (meta[i].checkmate) A[i] = {win: stm === 'w' ? 0 : 100, text:'#', lines:[]};
+    else if (meta[i].draw) A[i] = {win:50, text:'½', lines:[]};
+  });
+  const saveCache = () => { try { localStorage.setItem(keyFor(DEPTH), JSON.stringify(A)); } catch {} };
+  const ctx = {moves, fens, meta, A, R, opening};
   let ply = 0;
-
-  const count = (color, cls) => R.filter((r, i) => moves[i].color === color && r.cls === cls).length;
-  const keyMoments = R.map((r, i) => ({...r, i})).filter((r, i) => ['brilliant','great','mistake','blunder'].includes(r.cls));
-
-  app.innerHTML = `
-  <h1>${esc(g.white.username)} vs ${esc(g.black.username)}</h1>
-  <div class="sub">${esc(res.text)} · ${esc(g.time_class)} · ${new Date(g.end_time*1000).toLocaleString()} · <a href="${esc(g.url)}" target="_blank" rel="noopener">open on chess.com</a> · <a href="?user=${encodeURIComponent(USER)}">all games</a></div>
-  <div class="grid">
-    <div>
-      <div class="players"><span id="topName"></span><span class="acc" id="topAcc"></span></div>
-      <div class="boardrow"><div class="evalbar ${flipped ? 'flip' : ''}" id="evalbar"><div class="w"></div><span id="evtxt"></span></div><div class="board cg-wrap" id="board"></div></div>
-      <div class="players"><span id="botName"></span><span class="acc" id="botAcc"></span></div>
-      <div class="nav"><button data-n="first">⏮</button><button data-n="prev">◀</button><button data-n="next">▶</button><button data-n="last">⏭</button></div>
-      <svg class="graph" id="graph" preserveAspectRatio="none"></svg>
-    </div>
-    <div class="stack">
-      <div class="card coach" id="coach"></div>
-      <div class="card">
-        <table class="sum">
-          <tr class="accrow"><td>${accW.toFixed(1)}</td><td style="text-align:center;font-size:13px;color:var(--muted)">Accuracy</td><td>${accB.toFixed(1)}</td></tr>
-          <tr><td style="font-size:12px">${esc(g.white.username)}</td><td></td><td style="font-size:12px">${esc(g.black.username)}</td></tr>
-          ${ORDER.map(c => `<tr><td>${count('w', c)}</td><td><span class="dot" style="background:${CLS[c].color}">${CLS[c].sym}</span> ${CLS[c].label}</td><td>${count('b', c)}</td></tr>`).join('')}
-        </table>
-      </div>
-      <div class="card"><b>Moves</b><div class="moves" id="moves"></div></div>
-      <div class="card"><b>Key moments</b>${keyMoments.length ? `<ul class="keys">${keyMoments.map(k => `<li data-p="${k.i+1}"><span class="dot" style="background:${CLS[k.cls].color}">${CLS[k.cls].sym}</span> ${Math.floor(k.i/2)+1}${moves[k.i].color === 'w' ? '.' : '…'} ${esc(moves[k.i].san)} — ${CLS[k.cls].label}${k.cls === 'mistake' || k.cls === 'blunder' ? ` (best: ${esc(k.best)})` : ''}</li>`).join('')}</ul>` : '<div class="sub">No big swings — a clean game.</div>'}</div>
-      <div class="card sub">Depth: <select id="depth">${[12,14,16,18,20].map(d => `<option ${d === DEPTH ? 'selected' : ''}>${d}</option>`).join('')}</select> — higher is a deeper (slower) analysis.</div>
-    </div>
-  </div>`;
 
   const top = flipped ? 'w' : 'b';
   const pl = c => c === 'w' ? g.white : g.black;
-  document.getElementById('topName').textContent = `${pl(top).username} (${pl(top).rating})`;
-  document.getElementById('botName').textContent = `${pl(top === 'w' ? 'b' : 'w').username} (${pl(top === 'w' ? 'b' : 'w').rating})`;
-  document.getElementById('topAcc').textContent = (top === 'w' ? accW : accB).toFixed(1);
-  document.getElementById('botAcc').textContent = (top === 'w' ? accB : accW).toFixed(1);
+  const subLine = `${esc(res.text)} · ${esc(g.time_class)} · ${new Date(g.end_time*1000).toLocaleString()} · <a href="${esc(g.url)}" target="_blank" rel="noopener">open on chess.com</a> · <a href="?user=${encodeURIComponent(USER)}">all games</a>`;
+  const moveLabel = j => `${Math.floor(j/2)+1}${moves[j].color === 'w' ? '.' : '…'} ${moves[j].san}`;
 
-  // move list
-  const mv = document.getElementById('moves');
-  let html = '';
+  let listHtml = '';
   for (let i = 0; i < moves.length; i += 2) {
-    const cell = j => j < moves.length ? `<div class="mv" data-p="${j+1}"><span class="dot" style="background:${CLS[R[j].cls].color}">${CLS[R[j].cls].sym}</span>${esc(moves[j].san)}</div>` : '<div></div>';
-    html += `<div class="mrow"><div class="num">${i/2+1}.</div>${cell(i)}${cell(i+1)}</div>`;
+    const cell = j => j < moves.length ? `<button type="button" class="mv" data-p="${j+1}" id="mv${j}"><span class="dot" style="background:var(--c-pending)">·</span><span>${esc(moves[j].san)}</span></button>` : '<div></div>';
+    listHtml += `<div class="mrow"><div class="num">${i/2+1}.</div>${cell(i)}${cell(i+1)}</div><div class="note" id="nt${i}" data-p="${i+1}" hidden></div>${i+1 < moves.length ? `<div class="note" id="nt${i+1}" data-p="${i+2}" hidden></div>` : ''}`;
   }
-  mv.innerHTML = html;
 
-  // graph
-  const gr = document.getElementById('graph'), N = A.length - 1 || 1;
-  const pts = A.map((a, i) => `${(i/N*100).toFixed(2)},${(100 - a.win).toFixed(2)}`).join(' ');
-  gr.setAttribute('viewBox', '0 0 100 100');
-  gr.innerHTML = `<polygon points="0,100 ${pts} 100,100" fill="#f2f2f2"/><line x1="0" y1="50" x2="100" y2="50" stroke="#888" stroke-width=".4"/>
-    ${R.map((r, i) => ['mistake','blunder','brilliant','great'].includes(r.cls) ? `<line x1="${((i+1)/N*100).toFixed(2)}" x2="${((i+1)/N*100).toFixed(2)}" y1="${(100 - A[i+1].win - 5).toFixed(2)}" y2="${(100 - A[i+1].win + 5).toFixed(2)}" stroke="${CLS[r.cls].color}" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : '').join('')}
-    <line id="gcur" x1="0" y1="0" x2="0" y2="100" stroke="var(--accent)" stroke-width=".6"/>`;
-  gr.addEventListener('click', e => { const b = gr.getBoundingClientRect(); go(Math.round((e.clientX - b.left) / b.width * N)); });
+  app.innerHTML = `
+  <h1>${esc(g.white.username)} vs ${esc(g.black.username)}</h1>
+  <div class="sub">${subLine}</div>
+  <div class="grid">
+    <div class="col">
+      <div class="players o1"><span>${esc(pl(top).username)} (${pl(top).rating})</span><span class="acc" id="topAcc">…</span></div>
+      <div class="boardrow o2"><div class="evalbar ${flipped ? 'flip' : ''}" id="evalbar"><div class="w"></div><span id="evtxt"></span></div><div class="board cg-wrap" id="board"></div></div>
+      <div class="players o3"><span>${esc(pl(other(top)).username)} (${pl(other(top)).rating})</span><span class="acc" id="botAcc">…</span></div>
+      <div class="nav o4"><button type="button" data-n="first" aria-label="First move">⏮</button><button type="button" data-n="prev" aria-label="Previous move">◀</button><button type="button" data-n="next" aria-label="Next move">▶</button><button type="button" data-n="last" aria-label="Last move">⏭</button></div>
+      <div class="status o5" id="status"><span id="stxt">Starting Stockfish (depth ${DEPTH})…</span><div class="bar"><div id="sbar"></div></div></div>
+      <svg class="graph o7" id="graph" preserveAspectRatio="none" viewBox="0 0 100 100"></svg>
+    </div>
+    <div class="col stack">
+      <div class="card coach o6" id="coach"></div>
+      <div class="card o8"><b>Moves</b><div class="moves" id="moves">${listHtml}</div></div>
+      <div class="card o9"><table class="sum" id="sum"></table></div>
+      <div class="card o10"><b>Key moments</b><div id="keys"></div></div>
+      <div class="card sub o11">Depth: <select id="depth">${[10,12,14,16,18,20].map(d => `<option ${d === DEPTH ? 'selected' : ''}>${d}</option>`).join('')}</select> — higher is a deeper (slower) analysis.</div>
+    </div>
+  </div>`;
 
-  document.querySelectorAll('[data-p]').forEach(el => el.addEventListener('click', () => go(+el.dataset.p)));
-  document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', () => go({first:0, prev:ply-1, next:ply+1, last:moves.length}[b.dataset.n])));
-  document.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') go(ply-1); if (e.key === 'ArrowRight') go(ply+1); });
-  document.getElementById('depth').addEventListener('change', e => { qs.set('depth', e.target.value); location.search = qs.toString(); });
+  const $ = id => document.getElementById(id);
+  const mvBox = $('moves'), gr = $('graph'), N = moves.length || 1;
 
+  function renderSummary(){
+    const done = R.every(Boolean);
+    const accW = accuracy(R, 'w', moves), accB = accuracy(R, 'b', moves);
+    const f = v => done ? v.toFixed(1) : '…';
+    const count = (color, cls) => R.filter((r, i) => r && moves[i].color === color && r.cls === cls).length;
+    $('sum').innerHTML = `<tr class="accrow"><td>${f(accW)}</td><td style="text-align:center;font-size:13px;color:var(--muted)">Accuracy</td><td>${f(accB)}</td></tr>
+      <tr><td style="font-size:12px;overflow-wrap:anywhere">${esc(g.white.username)}</td><td></td><td style="font-size:12px;overflow-wrap:anywhere">${esc(g.black.username)}</td></tr>
+      ${ORDER.map(c => `<tr><td>${count('w', c)}</td><td><span class="dot" style="background:${CLS[c].color}">${CLS[c].sym}</span> ${CLS[c].label}</td><td>${count('b', c)}</td></tr>`).join('')}`;
+    $('topAcc').textContent = f(top === 'w' ? accW : accB);
+    $('botAcc').textContent = f(top === 'w' ? accB : accW);
+    const keys = R.map((r, i) => r && ['brilliant','great','mistake','blunder'].includes(r.cls) ? i : -1).filter(i => i >= 0);
+    $('keys').innerHTML = keys.length
+      ? `<ul class="keys">${keys.map(i => `<li data-p="${i+1}"><span class="dot" style="background:${CLS[R[i].cls].color}">${CLS[R[i].cls].sym}</span><span>${esc(moveLabel(i))} — ${CLS[R[i].cls].label}${BAD.includes(R[i].cls) ? ` (best: ${esc(R[i].best)})` : ''}</span></li>`).join('')}</ul>`
+      : `<div class="sub">${done ? 'No big swings — a clean game.' : 'Filling in as the analysis runs…'}</div>`;
+  }
+
+  function renderMoveCell(i){
+    const r = R[i], el = $('mv' + i), nt = $('nt' + i);
+    if (!el || !r) return;
+    const dot = el.querySelector('.dot');
+    dot.style.background = CLS[r.cls].color; dot.textContent = CLS[r.cls].sym;
+    el.title = CLS[r.cls].label;
+    if (NOTABLE.includes(r.cls) && X[i]) {
+      nt.hidden = false;
+      nt.style.borderLeftColor = CLS[r.cls].color;
+      nt.innerHTML = `<b>${esc(moveLabel(i))}${CLS[r.cls].sym.startsWith('!') || CLS[r.cls].sym.startsWith('?') ? CLS[r.cls].sym : ''}</b> <span style="color:${CLS[r.cls].color};font-weight:700">${CLS[r.cls].label}.</span> ${esc(X[i].note)}`;
+    }
+  }
+
+  function renderGraph(){
+    const pts = [];
+    A.forEach((a, i) => { if (a) pts.push(`${(i/N*100).toFixed(2)},${(100 - a.win).toFixed(2)}`); });
+    let lastX = 0; for (let i = A.length - 1; i >= 0; i--) if (A[i]) { lastX = i/N*100; break; }
+    const marks = R.map((r, i) => r && ['mistake','blunder','brilliant','great'].includes(r.cls)
+      ? `<line x1="${((i+1)/N*100).toFixed(2)}" x2="${((i+1)/N*100).toFixed(2)}" y1="${(100 - A[i+1].win - 5).toFixed(2)}" y2="${(100 - A[i+1].win + 5).toFixed(2)}" stroke="${CLS[r.cls].color}" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : '').join('');
+    gr.innerHTML = `${pts.length ? `<polygon points="0,100 ${pts.join(' ')} ${lastX.toFixed(2)},100" fill="#f2f2f2"/>` : ''}<line x1="0" y1="50" x2="100" y2="50" stroke="#888" stroke-width=".4"/>${marks}
+      <line id="gcur" x1="${ply/N*100}" y1="0" x2="${ply/N*100}" y2="100" stroke="var(--accent)" stroke-width=".6"/>`;
+  }
+
+  function tryClassify(i){
+    if (i < 0 || i >= moves.length || R[i] || !A[i] || !A[i+1]) return false;
+    R[i] = classifyMove(i, moves, fens, meta, A);
+    try { X[i] = explainMove(i, ctx); } catch (e) { console.error(e); X[i] = {text:'', note:''}; }
+    renderMoveCell(i);
+    return true;
+  }
+
+  function setStatus(){
+    const done = A.filter(Boolean).length;
+    $('sbar').style.width = (100 * done / A.length) + '%';
+    $('stxt').textContent = done === A.length ? `Analysis complete · Stockfish depth ${DEPTH}` : `Analyzing ${done}/${A.length} positions · depth ${DEPTH} · results fill in as they finish`;
+  }
+
+  // ---- board / coach ----
   function sqXY(sq){ const f = sq.charCodeAt(0) - 97, r = +sq[1]; return flipped ? [7 - f + .5, r - 1 + .5] : [f + .5, 8 - r + .5]; }
   function arrow(uci, color){
     const [x1, y1] = sqXY(uci.slice(0,2)), [x2, y2] = sqXY(uci.slice(2,4));
@@ -343,20 +626,31 @@ async function review(){
     return `<line x1="${x1}" y1="${y1}" x2="${ex}" y2="${ey}" stroke="${color}" stroke-width=".18" stroke-linecap="round" opacity=".85"/>
       <polygon points="${x2},${y2} ${ex - uy*.25},${ey + ux*.25} ${ex + uy*.25},${ey - ux*.25}" fill="${color}" opacity=".85"/>`;
   }
+  // scroll only the move list (never the page) so stepping through moves doesn't make the page jump
+  function revealInList(el){
+    if (!el) return;
+    const nt = $('nt' + (+el.dataset.p - 1));
+    const t = el.offsetTop, b = (nt && !nt.hidden ? nt.offsetTop + nt.offsetHeight : t + el.offsetHeight);
+    if (t < mvBox.scrollTop + 4) mvBox.scrollTop = Math.max(0, t - 8);
+    else if (b > mvBox.scrollTop + mvBox.clientHeight - 4) mvBox.scrollTop = b - mvBox.clientHeight + 8;
+  }
 
-  function go(p){
+  function go(p, scroll = true, anchor = null){
+    // iOS Safari has no scroll anchoring: if the tap came from below the coach panel, keep that spot still on screen
+    const anchorTop = anchor ? anchor.getBoundingClientRect().top : 0;
     ply = Math.max(0, Math.min(moves.length, p));
     const c = new Chess(fens[ply]), board = c.board();
     const last = ply > 0 ? moves[ply-1] : null, r = ply > 0 ? R[ply-1] : null;
+    const hlColor = r ? CLS[r.cls].color : 'var(--c-pending)';
     let h = '';
     for (let dr = 0; dr < 8; dr++) for (let dc = 0; dc < 8; dc++) {
       const row = flipped ? 7 - dr : dr, col = flipped ? 7 - dc : dc;
       const sq = 'abcdefgh'[col] + (8 - row), cell = board[row][col];
       const light = (row + col) % 2 === 0;
       let inner = '';
-      if (last && (sq === last.from || sq === last.to)) inner += `<div class="hl" style="background:${CLS[r.cls].color}"></div>`;
+      if (last && (sq === last.from || sq === last.to)) inner += `<div class="hl" style="background:${hlColor}"></div>`;
       if (cell) inner += `<piece class="${PIECE[cell.type]} ${cell.color === 'w' ? 'white' : 'black'}"></piece>`;
-      if (last && sq === last.to) inner += `<span class="badge" style="background:${CLS[r.cls].color}">${CLS[r.cls].sym}</span>`;
+      if (r && sq === last.to) inner += `<span class="badge" style="background:${CLS[r.cls].color}">${CLS[r.cls].sym}</span>`;
       if (dr === 7) inner += `<span class="coord f" style="color:${light ? 'var(--dark)' : 'var(--light)'}">${'abcdefgh'[col]}</span>`;
       if (dc === 0) inner += `<span class="coord r" style="color:${light ? 'var(--dark)' : 'var(--light)'}">${8 - row}</span>`;
       h += `<div class="sq ${light ? 'l' : 'd'}">${inner}</div>`;
@@ -364,43 +658,89 @@ async function review(){
     let arrows = '';
     if (r && !r.isBest && r.bestUci && !['brilliant','great','best','forced','book'].includes(r.cls)) arrows += arrow(r.bestUci, '#16a34a');
     h += `<svg class="arrows" viewBox="0 0 8 8">${arrows}</svg>`;
-    document.getElementById('board').innerHTML = h;
+    $('board').innerHTML = h;
 
     const ev = A[ply];
-    document.querySelector('#evalbar .w').style.height = ev.win + '%';
-    const et = document.getElementById('evtxt'); et.textContent = ev.text;
-    const whiteAhead = ev.win >= 50;
+    $('evalbar').querySelector('.w').style.height = (ev ? ev.win : 50) + '%';
+    const et = $('evtxt'); et.textContent = ev ? ev.text : '…';
+    const whiteAhead = !ev || ev.win >= 50;
     et.style.top = (whiteAhead !== flipped) ? 'auto' : '3px'; et.style.bottom = (whiteAhead !== flipped) ? '3px' : 'auto';
 
-    const coach = document.getElementById('coach');
-    if (!r) coach.innerHTML = `<div class="icon" style="background:var(--muted)">♟</div><div><b>Start of the game</b><div class="sub">Use ▶ / ◀ or arrow keys to step through. Click any move, the graph, or a key moment to jump.</div></div>`;
+    const coach = $('coach');
+    if (!last) coach.innerHTML = `<div class="icon" style="background:var(--muted)">♟</div><div><b>Start of the game</b><div class="sub expl">${SMALL ? 'Tap ▶ / ◀ or swipe the board to step through.' : 'Use ▶ / ◀ or the arrow keys to step through.'} Tap any move, the graph, or a key moment to jump. Notable moves are explained right in the move list.</div></div>`;
+    else if (!r) coach.innerHTML = `<div class="icon" style="background:var(--c-pending)">…</div><div><b>${esc(moveLabel(ply-1))}</b><div class="sub expl">Stockfish is still looking at this position. The explanation appears here as soon as it's done.</div></div>`;
     else {
       const who = last.color === 'w' ? g.white.username : g.black.username;
-      let msg = `<b>${esc(last.san)} is ${/^[aeiou]/i.test(CLS[r.cls].label) ? 'an' : 'a'} ${CLS[r.cls].label.toLowerCase()}</b>`;
+      const msg = `<b>${esc(last.san)} is ${r.cls === 'best' && !r.isBest ? 'as good as the best move' : CLS[r.cls].say}</b>`;
       let detail = `${esc(who)} · eval ${A[ply-1].text} → ${ev.text}`;
-      if (!r.isBest && r.best && !['brilliant','forced','book'].includes(r.cls)) detail += `<br>Best was <b>${esc(r.best)}</b> (${A[ply-1].lines[0].text})${A[ply-1].lines[0].pv.length > 1 ? `, line: ${esc(pvSan(fens[ply-1], A[ply-1].lines[0].pv))}` : ''}`;
-      if (r.cls === 'brilliant') detail += '<br>A strong piece sacrifice that keeps the advantage.';
-      if (r.cls === 'great') detail += '<br>The only move that keeps the position — every alternative was clearly worse.';
-      if (r.cls === 'forced') detail += '<br>The only legal move.';
-      if (r.cls === 'book') detail += `<br>Opening theory${g.eco ? ` — <a href="${esc(g.eco)}" target="_blank" rel="noopener">${esc(decodeURIComponent(g.eco.split('/').pop()).replace(/-/g, ' '))}</a>` : ''}.`;
-      coach.innerHTML = `<div class="icon" style="background:${CLS[r.cls].color}">${CLS[r.cls].sym}</div><div>${msg}<div class="sub">${detail}</div></div>`;
+      const bl = A[ply-1].lines[0];
+      if (!r.isBest && r.best && bl && !['brilliant','forced','book'].includes(r.cls)) detail += ` · engine line: ${esc(pvSan(fens[ply-1], bl.pv, 6))}`;
+      coach.innerHTML = `<div class="icon" style="background:${CLS[r.cls].color}">${CLS[r.cls].sym}</div><div>${msg}<div class="expl">${esc(X[ply-1]?.text || '')}</div><div class="sub">${detail}</div></div>`;
     }
-    document.querySelectorAll('.mv').forEach(el => el.classList.toggle('cur', +el.dataset.p === ply));
-    document.querySelector('.mv.cur')?.scrollIntoView({block:'nearest'});
-    const gc = document.getElementById('gcur'); gc.setAttribute('x1', ply/N*100); gc.setAttribute('x2', ply/N*100);
+    mvBox.querySelectorAll('.cur').forEach(el => el.classList.remove('cur'));
+    const curEl = $('mv' + (ply - 1));
+    if (curEl) { curEl.classList.add('cur'); $('nt' + (ply - 1))?.classList.add('cur'); if (scroll) revealInList(curEl); }
+    const gc = $('gcur'); if (gc) { gc.setAttribute('x1', ply/N*100); gc.setAttribute('x2', ply/N*100); }
+    if (anchor) { const d = anchor.getBoundingClientRect().top - anchorTop; if (Math.abs(d) > 1) window.scrollBy(0, d); }
   }
-  go(0);
-}
-function pvSan(fen, pv){
-  const c = new Chess(fen), out = [];
-  for (const u of pv.slice(0,5)) { try { out.push(c.move({from:u.slice(0,2), to:u.slice(2,4), promotion:u[4]}).san); } catch { break; } }
-  return out.join(' ');
+
+  // ---- events ----
+  const jump = e => { const t = e.target.closest('[data-p]'); if (t) go(+t.dataset.p, true, e.currentTarget); };
+  mvBox.addEventListener('click', jump);
+  $('keys').addEventListener('click', jump);
+  gr.addEventListener('click', e => { const b = gr.getBoundingClientRect(); go(Math.round((e.clientX - b.left) / b.width * N)); });
+  document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', () => go({first:0, prev:ply-1, next:ply+1, last:moves.length}[b.dataset.n])));
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('select,input')) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(ply-1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(ply+1); }
+  });
+  let tx = null, ty = 0;
+  const bd = $('board');
+  bd.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, {passive:true});
+  bd.addEventListener('touchend', e => {
+    if (tx == null) return;
+    const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty; tx = null;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) go(ply + (dx < 0 ? 1 : -1));
+  }, {passive:true});
+  $('depth').addEventListener('change', e => { qs.set('depth', e.target.value); location.search = qs.toString(); });
+  window.addEventListener('pagehide', saveCache);
+
+  // ---- first paint: board and move list right away, plus anything already cached ----
+  for (let i = 0; i < moves.length; i++) tryClassify(i);
+  renderSummary(); renderGraph(); setStatus(); go(0);
+  if (A.every(Boolean)) return;
+
+  // ---- incremental engine pass; the position on screen jumps the queue ----
+  let eng;
+  try { eng = new Engine(); await eng.init(); }
+  catch (e) { $('stxt').textContent = `Couldn't start Stockfish: ${e.message}. Reload to try again.`; eng?.w.terminate(); return; }
+  let sinceSave = 0;
+  for (;;) {
+    let i = A[ply] == null ? ply : (ply > 0 && A[ply-1] == null) ? ply - 1 : A.indexOf(null);
+    if (i < 0) break;
+    const stm = fens[i].split(' ')[1];
+    const raw = await eng.analyse(fens[i], DEPTH);
+    if (A[i]) continue;
+    if (!raw.length) A[i] = {win:50, text:'?', lines:[]};
+    else {
+      const lines = raw.map(l => ({uci:l.pv[0], pv:l.pv.slice(0, PV_LEN), ...toWhite(l, stm)}));
+      A[i] = {win:lines[0].win, text:lines[0].text, lines};
+    }
+    const changed = tryClassify(i - 1) | tryClassify(i);
+    setStatus(); renderGraph();
+    if (changed) renderSummary();
+    if (i === ply || i === ply - 1) go(ply, false);
+    if (++sinceSave >= 5) { saveCache(); sinceSave = 0; }
+  }
+  eng.w.terminate();
+  saveCache(); renderSummary(); setStatus(); go(ply, false);
 }
 
 (async () => {
   try {
     if (!USER) {
-      app.innerHTML = `<h1>Game Review</h1><div class="card"><form><label>chess.com username <input name="user" required style="padding:6px"></label> <button class="btn" style="flex:none;font-size:14px">Show games</button></form></div>`;
+      app.innerHTML = `<h1>Game Review</h1><div class="card"><form><label>chess.com username <input name="user" required autocapitalize="none" autocorrect="off"></label> <button class="btn" style="flex:none;font-size:16px;margin-top:8px">Show games</button></form></div>`;
     } else if (!GAME_ID) await gameList();
     else await review();
   } catch (e) {
