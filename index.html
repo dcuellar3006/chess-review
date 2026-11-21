@@ -28,10 +28,10 @@ h1{font-size:20px;margin:0 0 4px;overflow-wrap:anywhere}
 .grid{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:16px;margin-top:14px;align-items:start}
 .col{min-width:0}
 .boardrow{display:flex;gap:8px}
-.evalbar{width:22px;border-radius:6px;overflow:hidden;background:#333;position:relative;flex:none}
+.evalbar{width:30px;border-radius:6px;overflow:hidden;background:#333;position:relative;flex:none}
 .evalbar .w{position:absolute;bottom:0;left:0;right:0;background:#f5f5f5;transition:height .25s}
 .evalbar.flip .w{bottom:auto;top:0}
-.evalbar span{position:absolute;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:#777}
+.evalbar span{position:absolute;left:0;right:0;padding:0 1px;text-align:center;font-size:10px;line-height:12px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
 .board{position:relative;flex:1;min-width:0;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:6px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:pan-y}
 .sq{position:relative;display:flex;align-items:center;justify-content:center}
 .sq.l{background:var(--light)} .sq.d{background:var(--dark)}
@@ -39,7 +39,8 @@ h1{font-size:20px;margin:0 0 4px;overflow-wrap:anywhere}
 .cg-wrap piece{position:absolute;inset:0;background-size:cover;background-repeat:no-repeat;z-index:1}
 .coord{position:absolute;font-size:10px;font-weight:700;opacity:.7}
 .coord.f{right:3px;bottom:1px} .coord.r{left:3px;top:1px}
-.badge{position:absolute;top:-2px;right:-2px;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px #0006;z-index:3}
+.badge{position:absolute;top:-2px;right:-2px;width:22px;height:22px;padding:3px;border-radius:50%;display:flex;box-shadow:0 1px 3px #0006;z-index:3}
+.gl{width:100%;height:100%;display:block}
 svg.arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .players{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;font-weight:600;min-width:0}
 .players span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -52,23 +53,27 @@ svg.arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
 .status .bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:4px}
 .status .bar div{height:100%;background:var(--accent);width:0;transition:width .2s}
 .coach{display:flex;gap:10px;align-items:flex-start;min-height:120px}
-.coach .icon{flex:none;width:34px;height:34px;border-radius:50%;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.coach .icon{flex:none;width:34px;height:34px;padding:5px;border-radius:50%;display:flex}
 .coach b{font-size:16px}
 .coach .expl{margin:4px 0 6px}
 .moves{position:relative;max-height:440px;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;margin-top:10px;border-top:1px solid var(--line);padding-top:6px;font-variant-numeric:tabular-nums}
 .mrow{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr);gap:4px}
 .mv{min-height:44px;padding:4px 6px;border:0;background:none;text-align:left;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:0;touch-action:manipulation}
 .mv:hover{background:var(--line)} .mv.cur{outline:2px solid var(--accent);outline-offset:-2px;background:var(--note)}
-.dot{width:18px;height:18px;border-radius:50%;color:#fff;font-size:9px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.dot{width:18px;height:18px;padding:2px;border-radius:50%;display:inline-flex;flex:none;vertical-align:-4px}
 .num{color:var(--muted);display:flex;align-items:center}
 .note{margin:0 0 6px 38px;padding:6px 9px;border-left:3px solid var(--c-pending);background:var(--note);border-radius:0 6px 6px 0;font-size:13px;line-height:1.4;cursor:pointer}
 .note[hidden]{display:none}
 .note b{white-space:nowrap}
+.note .dot{margin-right:4px}
 .note.cur{outline:2px solid var(--accent);outline-offset:-2px}
 table.sum{width:100%;border-collapse:collapse;font-size:14px}
 table.sum td{padding:4px 6px;border-top:1px solid var(--line)}
 table.sum td:nth-child(1),table.sum td:nth-child(3){text-align:center;font-weight:700;width:60px}
 table.sum tr.accrow td{font-size:20px;border-top:none}
+table.sum tr.names td{border-top:none;padding-bottom:0}
+.sumnames{display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:700}
+.sumnames span{min-width:0;max-width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .graph{width:100%;height:90px;display:block;cursor:pointer;border-radius:6px;margin-top:10px;background:#3a3a3a}
 .stack>*+*{margin-top:12px}
 .keys{padding-left:0;list-style:none;margin:6px 0 0}
@@ -110,19 +115,41 @@ const SMALL = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 
 const EXPLICIT_DEPTH = qs.has('depth');
 let DEPTH = +(qs.get('depth') || (SMALL ? 12 : 14));
 const PV_LEN = 10;
+// Moves first flagged as inaccuracy/mistake/blunder are re-checked at this depth before their verdict is shown.
+const DEEP = 18;
 
-const CLS = {
-  brilliant: {sym:'!!', label:'Brilliant', color:'var(--c-brilliant)', say:'brilliant'},
-  great:     {sym:'!',  label:'Great move', color:'var(--c-great)', say:'a great move'},
-  best:      {sym:'★',  label:'Best move', color:'var(--c-best)', say:'the best move'},
-  excellent: {sym:'✓',  label:'Excellent', color:'var(--c-excellent)', say:'an excellent move'},
-  good:      {sym:'✓',  label:'Good', color:'var(--c-good)', say:'a good move'},
-  book:      {sym:'📖', label:'Book', color:'var(--c-book)', say:'a book move'},
-  forced:    {sym:'□',  label:'Forced', color:'var(--c-forced)', say:'forced'},
-  inaccuracy:{sym:'?!', label:'Inaccuracy', color:'var(--c-inaccuracy)', say:'an inaccuracy'},
-  mistake:   {sym:'?',  label:'Mistake', color:'var(--c-mistake)', say:'a mistake'},
-  blunder:   {sym:'??', label:'Blunder', color:'var(--c-blunder)', say:'a blunder'},
+// Classification icons are inline SVG (white on the colored dot) so they look the same on every device,
+// with no dependence on emoji or symbol fonts. All drawn on a 20x20 grid.
+const EXCL = x => `<path d="M${x} 4.6v6.8"/><circle cx="${x}" cy="15.3" r="1.35" fill="#fff" stroke="none"/>`;
+const QUES = (x, s = 1) => `<g transform="translate(${x} 0) scale(${s} 1)"><path d="M-2.6 7.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1 .8-1 1.5v.9"/></g><circle cx="${x}" cy="15.3" r="1.35" fill="#fff" stroke="none"/>`;
+const GLYPH = {
+  brilliant: EXCL(7) + EXCL(13),
+  great: EXCL(10),
+  best: '<path fill="#fff" stroke="none" d="M10 2.8l2.1 4.6 5 .5-3.8 3.4 1.1 4.9L10 13.7l-4.4 2.5 1.1-4.9-3.8-3.4 5-.5z"/>',
+  check: '<path stroke-width="2.6" d="M5 10.4l3.4 3.4L15.2 6.6"/>',
+  book: '<path fill="#fff" stroke="none" d="M9.3 6.1C7.7 5 5.8 4.6 3.8 4.8v9.9c1.9-.2 3.9.2 5.5 1.3zM10.7 6.1c1.6-1.1 3.5-1.5 5.5-1.3v9.9c-1.9-.2-3.9.2-5.5 1.3z"/>',
+  forced: '<path stroke-width="2" d="M7 9.2V7.4a3 3 0 0 1 6 0v1.8"/><rect x="5" y="9.2" width="10" height="7.4" rx="1.6" fill="#fff" stroke="none"/>',
+  inaccuracy: QUES(7.6, .9) + EXCL(14),
+  mistake: QUES(10),
+  blunder: QUES(6.3, .82) + QUES(13.7, .82),
+  pending: '<circle cx="5.5" cy="10" r="1.4" fill="#fff" stroke="none"/><circle cx="10" cy="10" r="1.4" fill="#fff" stroke="none"/><circle cx="14.5" cy="10" r="1.4" fill="#fff" stroke="none"/>',
+  start: '<path fill="#fff" stroke="none" d="M10 3.4a2.6 2.6 0 0 0-1.6 4.7C7.3 8.7 6.8 9.6 6.9 10.6h1.6c-.1 1.6-.6 3-1.9 4.1v1.9h6.8v-1.9c-1.3-1.1-1.8-2.5-1.9-4.1h1.6c.1-1-.4-1.9-1.5-2.5A2.6 2.6 0 0 0 10 3.4z"/>',
 };
+const svgIcon = k => `<svg class="gl" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${GLYPH[k]}</svg>`;
+const CLS = {
+  brilliant: {sym:'!!', icon:'brilliant', label:'Brilliant', color:'var(--c-brilliant)', say:'brilliant'},
+  great:     {sym:'!',  icon:'great', label:'Great move', color:'var(--c-great)', say:'a great move'},
+  best:      {sym:'',   icon:'best', label:'Best move', color:'var(--c-best)', say:'the best move'},
+  excellent: {sym:'',   icon:'check', label:'Excellent', color:'var(--c-excellent)', say:'an excellent move'},
+  good:      {sym:'',   icon:'check', label:'Good', color:'var(--c-good)', say:'a good move'},
+  book:      {sym:'',   icon:'book', label:'Book', color:'var(--c-book)', say:'a book move'},
+  forced:    {sym:'',   icon:'forced', label:'Forced', color:'var(--c-forced)', say:'forced'},
+  inaccuracy:{sym:'?!', icon:'inaccuracy', label:'Inaccuracy', color:'var(--c-inaccuracy)', say:'an inaccuracy'},
+  mistake:   {sym:'?',  icon:'mistake', label:'Mistake', color:'var(--c-mistake)', say:'a mistake'},
+  blunder:   {sym:'??', icon:'blunder', label:'Blunder', color:'var(--c-blunder)', say:'a blunder'},
+};
+// a colored dot with the class icon; `cls` may also be 'pending'
+const dotHtml = (cls, extra = 'dot') => `<span class="${extra}" style="background:${CLS[cls]?.color || 'var(--c-pending)'}">${svgIcon(CLS[cls]?.icon || 'pending')}</span>`;
 const ORDER = ['brilliant','great','best','excellent','good','book','forced','inaccuracy','mistake','blunder'];
 const NOTABLE = ['brilliant','great','inaccuracy','mistake','blunder'];
 const BAD = ['inaccuracy','mistake','blunder'];
@@ -267,9 +294,25 @@ function joinP(ph){
 }
 function standing(w){ return w >= 90 ? 'winning' : w >= 70 ? 'clearly better' : w >= 58 ? 'slightly better' : w > 42 ? 'about equal' : w > 30 ? 'slightly worse' : w > 10 ? 'clearly worse' : 'losing'; }
 function keepPhrase(C, w){
-  if (w > 42 && w < 58) return 'keeps the balance';
-  if (w >= 58) return `keeps ${C} ${standing(w)}`;
-  return `is the toughest defense, though ${C} is still ${standing(w)}`;
+  if (w > 42 && w < 58) return 'keeps the game roughly level by the engine\'s estimate';
+  if (w >= 58) return `keeps ${C} ${standing(w)} by the engine's estimate`;
+  return `holds out best by the engine's estimate, though it still rates ${C} as ${standing(w)}`;
+}
+// "about a pawn", "about 2.3 pawns"
+function pawnsPhrase(cp){
+  const p = Math.abs(cp) / 100;
+  if (p < 0.15) return 'next to nothing';
+  if (p < 0.75) return 'about half a pawn';
+  if (p < 1.25) return 'about a pawn';
+  return `about ${p.toFixed(1)} pawns`;
+}
+// engine verdict on a position, from the mover's point of view, worded as an estimate
+function evalPhrase(line, C, O, me){
+  if (!line) return '';
+  if (line.mate != null) { const m = me === 'w' ? line.mate : -line.mate; return `the engine finds a forced mate in ${Math.abs(m)} for ${m > 0 ? C : O}`; }
+  const cp = me === 'w' ? line.cp : -line.cp;
+  if (Math.abs(cp) < 15) return 'the engine rates it as roughly level';
+  return `the engine gives ${cp > 0 ? C : O} ${pawnsPhrase(cp)}`;
 }
 function gainPhrase(net, took){
   const has = t => took.includes(t);
@@ -314,17 +357,18 @@ function describeMove(mv, prev, ply){
 }
 
 /* ---------- classification ---------- */
-function classifyMove(i, moves, fens, meta, A){
+// B / Af: engine results for the positions before and after move i (same depth for both)
+function classifyMove(i, moves, fens, meta, B, Af){
   const m = moves[i];
   const pov = x => m.color === 'w' ? x : 100 - x;
-  const before = pov(A[i].win), after = pov(A[i+1].win);
+  const before = pov(B.win), after = pov(Af.win);
   const loss = Math.max(0, before - after);
   const played = m.from + m.to + (m.promotion || '');
-  const [l1, l2] = A[i].lines;
+  const [l1, l2] = B.lines;
   const isBest = !!l1 && played === l1.uci;
   let cls;
   if (meta[i].legal === 1) cls = 'forced';
-  else if ((i < 8 && loss < 20) || (i < 16 && loss < 8 && Math.abs(A[i+1].win - 50) < 15)) cls = 'book';
+  else if ((i < 8 && loss < 20) || (i < 16 && loss < 8 && Math.abs(Af.win - 50) < 15)) cls = 'book';
   else if (loss < 2 && isSacrifice(m, fens[i+1]) && after >= 50 && before < 90) cls = 'brilliant';
   else if (isBest && l2 && pov(l1.win) - pov(l2.win) >= 15 && before < 95 && !(m.captured && moves[i-1]?.to === m.to)) cls = 'great';
   else if (isBest || loss < 1) cls = 'best';
@@ -354,13 +398,14 @@ function accuracy(rs, color, moves){
 
 /* ---------- move explanations ---------- */
 // Builds 1-3 plain-language sentences for move i from the engine lines and simple board facts.
-function explainMove(i, ctx){
-  const {moves, fens, meta, A, R, opening} = ctx;
+// Every move or line named here is replayed through chess.js first (tryMove / pvSan / settle stop at the
+// first illegal move), and judgments that rest only on the evaluation are worded as engine estimates.
+function explainMove(i, ctx, B, Af){
+  const {moves, fens, meta, R, opening} = ctx;
   const m = moves[i], r = R[i], me = m.color, en = other(me);
   const C = colorName(me), O = colorName(en);
   const pov = w => me === 'w' ? w : 100 - w;
   const mateFor = l => l && l.mate != null ? (me === 'w' ? l.mate : -l.mate) : null; // >0: mover mates
-  const B = A[i], Af = A[i+1];
   const l1 = B.lines[0], l2 = B.lines[1], reply = Af.lines[0];
   const prev = moves[i-1] || null;
   const did = describeMove(m, prev, i);
@@ -399,37 +444,37 @@ function explainMove(i, ctx){
         const c = new Chess(fens[i+1]);
         const att = c.attackers(m.to, en).map(s => c.get(s).type).sort((a, b) => VAL[a] - VAL[b])[0];
         S.push(`${m.san} puts the ${PIECE[m.piece]} where ${att ? `the ${PIECE[att]}` : `${O}`} can take it, a real sacrifice.`);
-        S.push(`Taking it doesn't pay off for ${O}: the engine still has ${C} ${standing(winA)} (${Af.text}).`);
+        S.push(`The engine doesn't think taking it pays off for ${O}: it still rates ${C} as ${standing(winA)} (${Af.text}).`);
         break;
       }
-      S.push(doesS || (r.cls === 'best' || r.cls === 'great' ? `${m.san} is exactly what the position needed.` : `${m.san} is a sensible move.`));
+      S.push(doesS || (r.cls === 'best' || r.cls === 'great' ? `${m.san} is the engine's top choice here.` : `${m.san} is a sensible move.`));
       if (r.cls === 'great') {
         if (l2) {
           const m2 = mateFor(l2), w2 = pov(l2.win);
-          const conseq = m2 != null && m2 < 0 ? 'walks into a forced mate'
-            : (w2 <= 42 && winA > 42) || (w2 < 58 && winA >= 58) ? `would have left ${C} ${standing(w2)}`
-            : `would have dropped the evaluation to ${l2.text}`;
-          S.push(`It was the only move that ${winA >= 70 ? 'keeps the advantage' : 'holds the position'}: the next best option, ${uciToSan(fens[i], l2.uci)}, ${conseq}.`);
-        } else S.push('It was the only good move here.');
+          const conseq = m2 != null && m2 < 0 ? `runs into a forced mate in ${-m2} according to the engine`
+            : (w2 <= 42 && winA > 42) || (w2 < 58 && winA >= 58) ? `would leave ${C} ${standing(w2)} by the engine's estimate`
+            : `rates only ${l2.text} by the engine's estimate`;
+          S.push(`The engine sees it as the only move that ${winA >= 70 ? 'keeps the advantage' : 'holds the position'}: the next best option, ${uciToSan(fens[i], l2.uci)}, ${conseq}.`);
+        } else S.push('The engine sees it as clearly the strongest option here.');
       } else if (r.cls === 'best') {
-        if (mA != null && mA > 0) S.push(`It keeps a forced mate in ${mA} on track.`);
-        else if (r.isBest && bestGain >= 1 && !m.captured) S.push(`Followed up correctly, it ${gainPhrase(bestGain, bst.took[me])} (${bestLine()}).`);
+        if (mA != null && mA > 0) S.push(`The engine reports a forced mate in ${mA} after it.`);
+        else if (r.isBest && bestGain >= 1 && !m.captured) S.push(`In the engine's main line it ${gainPhrase(bestGain, bst.took[me])} (${bestLine()}).`);
         else if (!r.isBest && bestSan) S.push(`It's just as good as the engine's first choice, ${bestSan}, and ${keepPhrase(C, winA)}.`);
         else S.push(`It's the engine's top choice and ${keepPhrase(C, winA)}.`);
       } else if (r.cls === 'excellent') {
-        S.push(`Nearly as strong as the engine's top pick, ${bestSan}.`);
+        S.push(`The engine rates it nearly as strong as its top pick, ${bestSan}.`);
       } else {
         const extra = bestGain >= 1 && mpov(bst.d) - mpov(ref.d) >= 1 ? `, which ${gainPhrase(bestGain, bst.took[me])}` : '';
-        S.push(`${bestSan} was a bit more precise${extra}.`);
+        S.push(`The engine slightly prefers ${bestSan}${extra}.`);
       }
       break;
     }
     default: { // inaccuracy / mistake / blunder
       let generic = false;
       if (mA != null && mA < 0 && !(mB != null && mB < 0)) {
-        S.push(`${m.san} allows a forced mate in ${-mA}${replyMv ? `, starting with ${replyMv.san}` : ''}.`);
+        S.push(`${m.san} allows a forced mate in ${-mA} by the engine's count${replyMv ? `, starting with ${replyMv.san}` : ''}.`);
       } else if (mB != null && mB > 0 && !(mA != null && mA > 0)) {
-        S.push(`${m.san} lets a forced mate slip away.`);
+        S.push(`${m.san} lets a mate slip away: the engine had found a forced mate in ${mB} here.`);
       } else if (refLoss >= 1 && (!bst || refLoss > m0 - mpov(bst.d))) {
         const loose = loosePieces(new Chess(fens[i+1]), me);
         const hung = replyMv?.captured && loose.find(p => p.sq === replyMv.to && VAL[p.type] >= refLoss - 0.5);
@@ -437,38 +482,35 @@ function explainMove(i, ctx){
         if (hung) S.push(`${m.san} leaves the ${PIECE[hung.type]} on ${hung.sq} unprotected, and ${O} can grab it with ${replyMv.san}.`);
         else {
           const tac = describeMove(replyMv, m, i + 1).find(p => /^forks|^attacks|^gives check/.test(p));
-          S.push(`${m.san} allows ${replyMv ? replyMv.san : 'a strong reply'}${tac ? `, which ${tac},` : ''} and ${O} ${gain}.`);
+          S.push(`${m.san} allows ${replyMv ? replyMv.san : 'a strong reply'}${tac ? `, which ${tac},` : ''} and in the engine's line ${O} ${gain}${replyMv && reply ? ` (${pvSan(fens[i+1], reply.pv, Math.max(1, ref.upto - 1))})` : ''}.`);
         }
       } else if (bst && bestGain >= 1 && mpov(bst.d) - mpov(ref.d) >= 1) {
-        S.push(`${m.san} misses a chance to win material.`);
+        S.push(`${m.san} misses a chance to win material that the engine found.`);
       } else {
         generic = true;
         const rd = describeMove(replyMv, m, i + 1).filter(p => !/^develops|^stakes/.test(p));
         const cpB = l1?.cp, cpA = reply?.cp;
         if (rd.length && replyMv) S.push(`After ${m.san}, ${O} gets ${replyMv.san}, which ${joinP(rd)}.`);
-        else if (cpB != null && cpA != null) {
-          const drop = (mpov(cpB) - mpov(cpA)) / 100;
-          S.push(`${m.san} gives away about ${drop.toFixed(1)} pawn${Math.abs(drop - 1) < .05 ? '' : 's'} of evaluation without a concrete gain.`);
-        } else S.push(`${m.san} lets ${O} improve the position.`);
+        else if (cpB != null && cpA != null) S.push(`By the engine's estimate, ${m.san} gives away ${pawnsPhrase(mpov(cpB) - mpov(cpA))} without a concrete gain.`);
+        else S.push(`The engine thinks ${m.san} lets ${O} improve the position.`);
       }
       // the better move and its idea
       const ideas = [];
       let showLine = false;
-      if (mB != null && mB > 0) { ideas.push(`forces mate in ${mB}`); showLine = true; }
+      if (mB != null && mB > 0) { ideas.push(`leads to a forced mate in ${mB} according to the engine`); showLine = true; }
       else {
         const bd = describeMove(bestMv, prev, i);
         const gainS = bst && bestGain >= 1 && mpov(bst.d) - mpov(ref.d) >= 1 ? gainPhrase(bestGain, bst.took[me]) : '';
         ideas.push(...(gainS ? bd.filter(p => !/^takes|^recaptures/.test(p)) : bd).slice(0, 2));
         if (mA != null && mA < 0) ideas.push('keeps the king out of the mating net');
-        if (gainS) { ideas.push(gainS); showLine = true; }
+        if (gainS) { ideas.push(`in the engine's line ${gainS}`); showLine = true; }
         else if (refLoss >= 1 && bst && m0 - mpov(bst.d) < refLoss) ideas.push('keeps the material level');
       }
-      const tail = ideas.length ? `, which ${joinP(ideas.slice(0, 3))}` : `, which ${keepPhrase(C, pov(l1?.win ?? B.win))}`;
-      const bestS = bestSan ? `Better was ${bestSan}${tail}` : '';
+      const tail = ideas.length ? `, which ${joinP(ideas.slice(0, 3))}` : `: ${evalPhrase(l1, C, O, me) || 'it holds up better'}`;
+      const bestS = bestSan ? `The engine prefers ${bestSan}${tail}` : '';
       if (bestS) S.push(bestS + (showLine && l1 ? ` (${mB != null && mB > 0 ? pvSan(fens[i], l1.pv, 2 * mB - 1) : bestLine()}).` : '.'));
       const sa = standing(winB), sb = standing(winA);
-      if (r.cls !== 'inaccuracy' && sa !== sb && S.length < 3) S.push(`${C} goes from ${sa} to ${sb}.`);
-      else if (generic && sa !== sb && S.length < 3) S.push(`${C} goes from ${sa} to ${sb}.`);
+      if ((r.cls !== 'inaccuracy' || generic) && sa !== sb && S.length < 3) S.push(`By the engine's estimate, ${C} goes from ${sa} to ${sb}.`);
       note = S[0] + (bestS ? ' ' + bestS + '.' : '');
     }
   }
@@ -512,6 +554,10 @@ async function review(){
   const A = new Array(fens.length).fill(null);   // engine eval per position
   const R = new Array(moves.length).fill(null);  // classification per move
   const X = new Array(moves.length).fill(null);  // explanation per move
+  const D = new Array(fens.length).fill(null);   // deeper evals, only for positions around flagged moves
+  const deepQ = new Set();                       // positions still waiting for the deeper pass
+  const deepAsked = new Set();
+  const waiting = new Set();                     // moves whose verdict waits on the deeper pass
   const keyFor = d => `rv:${GAME_ID}:${d}`;
   const readCache = d => { try { const c = JSON.parse(localStorage.getItem(keyFor(d))); return Array.isArray(c) && c.length === fens.length ? c : null; } catch { return null; } };
   let cached = readCache(DEPTH);
@@ -519,15 +565,21 @@ async function review(){
     // reuse a finished deeper analysis if one exists (e.g. opened on a laptop before)
     for (const d of [20,18,16,14]) { if (d <= DEPTH) continue; const h = readCache(d); if (h && h.every(Boolean)) { DEPTH = d; cached = h; break; } }
   }
-  if (cached) cached.forEach((a, i) => { if (a && typeof a.win === 'number' && Array.isArray(a.lines)) A[i] = a; });
+  const DEEP_ON = DEPTH < DEEP;
+  const okEval = a => a && typeof a.win === 'number' && Array.isArray(a.lines);
+  if (cached) cached.forEach((a, i) => { if (okEval(a)) A[i] = a; });
+  if (DEEP_ON) { const dc = readCache('deep' + DEEP); if (dc) dc.forEach((a, i) => { if (okEval(a)) D[i] = a; }); }
   fens.forEach((f, i) => {
-    if (A[i]) return;
     const stm = f.split(' ')[1];
-    if (meta[i].checkmate) A[i] = {win: stm === 'w' ? 0 : 100, text:'#', lines:[]};
-    else if (meta[i].draw) A[i] = {win:50, text:'½', lines:[]};
+    const t = meta[i].checkmate ? {win: stm === 'w' ? 0 : 100, text:'#', lines:[]} : meta[i].draw ? {win:50, text:'½', lines:[]} : null;
+    if (t) { A[i] = A[i] || t; D[i] = D[i] || t; }
   });
-  const saveCache = () => { try { localStorage.setItem(keyFor(DEPTH), JSON.stringify(A)); } catch {} };
-  const ctx = {moves, fens, meta, A, R, opening};
+  const saveCache = () => { try {
+    localStorage.setItem(keyFor(DEPTH), JSON.stringify(A));
+    if (DEEP_ON && D.some((d, i) => d && !meta[i].checkmate && !meta[i].draw)) localStorage.setItem(keyFor('deep' + DEEP), JSON.stringify(D));
+  } catch {} };
+  const EV = i => D[i] || A[i];  // best available eval of a position, for the bar and graph
+  const ctx = {moves, fens, meta, R, opening};
   let ply = 0;
 
   const top = flipped ? 'w' : 'b';
@@ -570,52 +622,68 @@ async function review(){
     const accW = accuracy(R, 'w', moves), accB = accuracy(R, 'b', moves);
     const f = v => done ? v.toFixed(1) : '…';
     const count = (color, cls) => R.filter((r, i) => r && moves[i].color === color && r.cls === cls).length;
-    $('sum').innerHTML = `<tr class="accrow"><td>${f(accW)}</td><td style="text-align:center;font-size:13px;color:var(--muted)">Accuracy</td><td>${f(accB)}</td></tr>
-      <tr><td style="font-size:12px;overflow-wrap:anywhere">${esc(g.white.username)}</td><td></td><td style="font-size:12px;overflow-wrap:anywhere">${esc(g.black.username)}</td></tr>
-      ${ORDER.map(c => `<tr><td>${count('w', c)}</td><td><span class="dot" style="background:${CLS[c].color}">${CLS[c].sym}</span> ${CLS[c].label}</td><td>${count('b', c)}</td></tr>`).join('')}`;
+    $('sum').innerHTML = `<tr class="names"><td colspan="3"><div class="sumnames"><span title="${esc(g.white.username)}">${esc(g.white.username)}</span><span title="${esc(g.black.username)}">${esc(g.black.username)}</span></div></td></tr>
+      <tr class="accrow"><td>${f(accW)}</td><td style="text-align:center;font-size:13px;color:var(--muted)">Accuracy</td><td>${f(accB)}</td></tr>
+      ${ORDER.map(c => `<tr><td>${count('w', c)}</td><td>${dotHtml(c)} ${CLS[c].label}</td><td>${count('b', c)}</td></tr>`).join('')}`;
     $('topAcc').textContent = f(top === 'w' ? accW : accB);
     $('botAcc').textContent = f(top === 'w' ? accB : accW);
     const keys = R.map((r, i) => r && ['brilliant','great','mistake','blunder'].includes(r.cls) ? i : -1).filter(i => i >= 0);
     $('keys').innerHTML = keys.length
-      ? `<ul class="keys">${keys.map(i => `<li data-p="${i+1}"><span class="dot" style="background:${CLS[R[i].cls].color}">${CLS[R[i].cls].sym}</span><span>${esc(moveLabel(i))} — ${CLS[R[i].cls].label}${BAD.includes(R[i].cls) ? ` (best: ${esc(R[i].best)})` : ''}</span></li>`).join('')}</ul>`
+      ? `<ul class="keys">${keys.map(i => `<li data-p="${i+1}">${dotHtml(R[i].cls)}<span>${esc(moveLabel(i))} — ${CLS[R[i].cls].label}${BAD.includes(R[i].cls) ? ` (best: ${esc(R[i].best)})` : ''}</span></li>`).join('')}</ul>`
       : `<div class="sub">${done ? 'No big swings — a clean game.' : 'Filling in as the analysis runs…'}</div>`;
   }
 
   function renderMoveCell(i){
     const r = R[i], el = $('mv' + i), nt = $('nt' + i);
-    if (!el || !r) return;
-    const dot = el.querySelector('.dot');
-    dot.style.background = CLS[r.cls].color; dot.textContent = CLS[r.cls].sym;
+    if (!el) return;
+    if (!r) { if (waiting.has(i)) el.title = `Double-checking at depth ${DEEP}`; return; }
+    el.querySelector('.dot').outerHTML = dotHtml(r.cls);
     el.title = CLS[r.cls].label;
     if (NOTABLE.includes(r.cls) && X[i]) {
       nt.hidden = false;
       nt.style.borderLeftColor = CLS[r.cls].color;
-      nt.innerHTML = `<b>${esc(moveLabel(i))}${CLS[r.cls].sym.startsWith('!') || CLS[r.cls].sym.startsWith('?') ? CLS[r.cls].sym : ''}</b> <span style="color:${CLS[r.cls].color};font-weight:700">${CLS[r.cls].label}.</span> ${esc(X[i].note)}`;
-    }
+      nt.innerHTML = `<b>${dotHtml(r.cls)}${esc(moveLabel(i))}${CLS[r.cls].sym}</b> <span style="color:${CLS[r.cls].color};font-weight:700">${CLS[r.cls].label}.</span> ${esc(X[i].note)}`;
+    } else nt.hidden = true;
   }
 
   function renderGraph(){
     const pts = [];
-    A.forEach((a, i) => { if (a) pts.push(`${(i/N*100).toFixed(2)},${(100 - a.win).toFixed(2)}`); });
+    A.forEach((a, i) => { if (a) pts.push(`${(i/N*100).toFixed(2)},${(100 - EV(i).win).toFixed(2)}`); });
     let lastX = 0; for (let i = A.length - 1; i >= 0; i--) if (A[i]) { lastX = i/N*100; break; }
     const marks = R.map((r, i) => r && ['mistake','blunder','brilliant','great'].includes(r.cls)
-      ? `<line x1="${((i+1)/N*100).toFixed(2)}" x2="${((i+1)/N*100).toFixed(2)}" y1="${(100 - A[i+1].win - 5).toFixed(2)}" y2="${(100 - A[i+1].win + 5).toFixed(2)}" stroke="${CLS[r.cls].color}" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : '').join('');
+      ? `<line x1="${((i+1)/N*100).toFixed(2)}" x2="${((i+1)/N*100).toFixed(2)}" y1="${(100 - r.Af.win - 5).toFixed(2)}" y2="${(100 - r.Af.win + 5).toFixed(2)}" stroke="${CLS[r.cls].color}" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : '').join('');
     gr.innerHTML = `${pts.length ? `<polygon points="0,100 ${pts.join(' ')} ${lastX.toFixed(2)},100" fill="#f2f2f2"/>` : ''}<line x1="0" y1="50" x2="100" y2="50" stroke="#888" stroke-width=".4"/>${marks}
       <line id="gcur" x1="${ply/N*100}" y1="0" x2="${ply/N*100}" y2="100" stroke="var(--accent)" stroke-width=".6"/>`;
   }
 
+  // A move is classified from the base-depth evals. If that says inaccuracy/mistake/blunder, the verdict is held
+  // back until both positions have been re-analyzed at DEEP, and the deeper pair decides (it may clear the move).
   function tryClassify(i){
     if (i < 0 || i >= moves.length || R[i] || !A[i] || !A[i+1]) return false;
-    R[i] = classifyMove(i, moves, fens, meta, A);
-    try { X[i] = explainMove(i, ctx); } catch (e) { console.error(e); X[i] = {text:'', note:''}; }
+    let B = A[i], Af = A[i+1], deep = false;
+    if (DEEP_ON && BAD.includes(classifyMove(i, moves, fens, meta, B, Af).cls)) {
+      if (!D[i] || !D[i+1]) {
+        for (const p of [i, i+1]) if (!D[p] && !deepAsked.has(p)) { deepQ.add(p); deepAsked.add(p); }
+        waiting.add(i); renderMoveCell(i);
+        return false;
+      }
+      B = D[i]; Af = D[i+1]; deep = true;
+    }
+    waiting.delete(i);
+    R[i] = {...classifyMove(i, moves, fens, meta, B, Af), B, Af, deep};
+    try { X[i] = explainMove(i, ctx, B, Af); } catch (e) { console.error(e); X[i] = {text:'', note:''}; }
     renderMoveCell(i);
     return true;
   }
 
   function setStatus(){
-    const done = A.filter(Boolean).length;
-    $('sbar').style.width = (100 * done / A.length) + '%';
-    $('stxt').textContent = done === A.length ? `Analysis complete · Stockfish depth ${DEPTH}` : `Analyzing ${done}/${A.length} positions · depth ${DEPTH} · results fill in as they finish`;
+    const base = A.filter(Boolean).length, deepDone = deepAsked.size - deepQ.size;
+    $('sbar').style.width = (100 * (base + deepDone) / (A.length + deepAsked.size)) + '%';
+    const flagged = waiting.size;
+    $('stxt').textContent = base < A.length
+      ? `Analyzing ${base}/${A.length} positions · depth ${DEPTH} · results fill in as they finish`
+      : flagged ? `Double-checking ${flagged} flagged move${flagged === 1 ? '' : 's'} at depth ${DEEP}…`
+      : `Analysis complete · Stockfish depth ${DEPTH}${deepAsked.size ? ` (flagged moves checked at ${DEEP})` : ''}`;
   }
 
   // ---- board / coach ----
@@ -650,7 +718,7 @@ async function review(){
       let inner = '';
       if (last && (sq === last.from || sq === last.to)) inner += `<div class="hl" style="background:${hlColor}"></div>`;
       if (cell) inner += `<piece class="${PIECE[cell.type]} ${cell.color === 'w' ? 'white' : 'black'}"></piece>`;
-      if (r && sq === last.to) inner += `<span class="badge" style="background:${CLS[r.cls].color}">${CLS[r.cls].sym}</span>`;
+      if (r && sq === last.to) inner += dotHtml(r.cls, 'badge');
       if (dr === 7) inner += `<span class="coord f" style="color:${light ? 'var(--dark)' : 'var(--light)'}">${'abcdefgh'[col]}</span>`;
       if (dc === 0) inner += `<span class="coord r" style="color:${light ? 'var(--dark)' : 'var(--light)'}">${8 - row}</span>`;
       h += `<div class="sq ${light ? 'l' : 'd'}">${inner}</div>`;
@@ -660,22 +728,28 @@ async function review(){
     h += `<svg class="arrows" viewBox="0 0 8 8">${arrows}</svg>`;
     $('board').innerHTML = h;
 
-    const ev = A[ply];
+    const ev = r ? r.Af : EV(ply);
     $('evalbar').querySelector('.w').style.height = (ev ? ev.win : 50) + '%';
+    // the label sits inside the bar, at the end of the side that's ahead, sized so it always fits the bar's width
     const et = $('evtxt'); et.textContent = ev ? ev.text : '…';
-    const whiteAhead = !ev || ev.win >= 50;
-    et.style.top = (whiteAhead !== flipped) ? 'auto' : '3px'; et.style.bottom = (whiteAhead !== flipped) ? '3px' : 'auto';
+    const whiteAhead = !ev || ev.win >= 50, atBottom = whiteAhead !== flipped;
+    et.style.top = atBottom ? 'auto' : '3px'; et.style.bottom = atBottom ? '3px' : 'auto';
+    et.style.color = whiteAhead ? '#333' : '#ddd';
+    et.style.fontSize = '10px';
+    for (let fs = 10; fs > 7 && et.scrollWidth > et.clientWidth; fs -= .5) et.style.fontSize = fs + 'px';
 
     const coach = $('coach');
-    if (!last) coach.innerHTML = `<div class="icon" style="background:var(--muted)">♟</div><div><b>Start of the game</b><div class="sub expl">${SMALL ? 'Tap ▶ / ◀ or swipe the board to step through.' : 'Use ▶ / ◀ or the arrow keys to step through.'} Tap any move, the graph, or a key moment to jump. Notable moves are explained right in the move list.</div></div>`;
-    else if (!r) coach.innerHTML = `<div class="icon" style="background:var(--c-pending)">…</div><div><b>${esc(moveLabel(ply-1))}</b><div class="sub expl">Stockfish is still looking at this position. The explanation appears here as soon as it's done.</div></div>`;
+    if (!last) coach.innerHTML = `<div class="icon" style="background:var(--muted)">${svgIcon('start')}</div><div><b>Start of the game</b><div class="sub expl">${SMALL ? 'Tap ▶ / ◀ or swipe the board to step through.' : 'Use ▶ / ◀ or the arrow keys to step through.'} Tap any move, the graph, or a key moment to jump. Notable moves are explained right in the move list.</div></div>`;
+    else if (!r) coach.innerHTML = `<div class="icon" style="background:var(--c-pending)">${svgIcon('pending')}</div><div><b>${esc(moveLabel(ply-1))}</b><div class="sub expl">${waiting.has(ply-1)
+      ? `The quick pass flagged this move, so Stockfish is double-checking it at depth ${DEEP} before giving a verdict. This fills in after the rest of the game is analyzed.`
+      : `Stockfish is still looking at this position. The explanation appears here as soon as it's done.`}</div></div>`;
     else {
       const who = last.color === 'w' ? g.white.username : g.black.username;
       const msg = `<b>${esc(last.san)} is ${r.cls === 'best' && !r.isBest ? 'as good as the best move' : CLS[r.cls].say}</b>`;
-      let detail = `${esc(who)} · eval ${A[ply-1].text} → ${ev.text}`;
-      const bl = A[ply-1].lines[0];
+      let detail = `${esc(who)} · engine eval ${r.B.text} → ${r.Af.text}${r.deep ? ` (checked at depth ${DEEP})` : ''}`;
+      const bl = r.B.lines[0];
       if (!r.isBest && r.best && bl && !['brilliant','forced','book'].includes(r.cls)) detail += ` · engine line: ${esc(pvSan(fens[ply-1], bl.pv, 6))}`;
-      coach.innerHTML = `<div class="icon" style="background:${CLS[r.cls].color}">${CLS[r.cls].sym}</div><div>${msg}<div class="expl">${esc(X[ply-1]?.text || '')}</div><div class="sub">${detail}</div></div>`;
+      coach.innerHTML = `${dotHtml(r.cls, 'icon')}<div>${msg}<div class="expl">${esc(X[ply-1]?.text || '')}</div><div class="sub">${detail}</div></div>`;
     }
     mvBox.querySelectorAll('.cur').forEach(el => el.classList.remove('cur'));
     const curEl = $('mv' + (ply - 1));
@@ -709,24 +783,32 @@ async function review(){
   // ---- first paint: board and move list right away, plus anything already cached ----
   for (let i = 0; i < moves.length; i++) tryClassify(i);
   renderSummary(); renderGraph(); setStatus(); go(0);
-  if (A.every(Boolean)) return;
+  if (A.every(Boolean) && !deepQ.size) return;
 
   // ---- incremental engine pass; the position on screen jumps the queue ----
   let eng;
   try { eng = new Engine(); await eng.init(); }
   catch (e) { $('stxt').textContent = `Couldn't start Stockfish: ${e.message}. Reload to try again.`; eng?.w.terminate(); return; }
   let sinceSave = 0;
+  const toEval = (raw, stm) => {
+    if (!raw.length) return {win:50, text:'?', lines:[]};
+    const lines = raw.map(l => ({uci:l.pv[0], pv:l.pv.slice(0, PV_LEN), ...toWhite(l, stm)}));
+    return {win:lines[0].win, text:lines[0].text, lines};
+  };
   for (;;) {
-    let i = A[ply] == null ? ply : (ply > 0 && A[ply-1] == null) ? ply - 1 : A.indexOf(null);
-    if (i < 0) break;
-    const stm = fens[i].split(' ')[1];
-    const raw = await eng.analyse(fens[i], DEPTH);
-    if (A[i]) continue;
-    if (!raw.length) A[i] = {win:50, text:'?', lines:[]};
-    else {
-      const lines = raw.map(l => ({uci:l.pv[0], pv:l.pv.slice(0, PV_LEN), ...toWhite(l, stm)}));
-      A[i] = {win:lines[0].win, text:lines[0].text, lines};
+    // base pass first (the position on screen jumps the queue); the deeper checks only run once it's done,
+    // so they never hold up the board, the move list or verdicts already shown
+    let i = A[ply] == null ? ply : (ply > 0 && A[ply-1] == null) ? ply - 1 : A.indexOf(null), deep = false;
+    if (i < 0) {
+      if (!deepQ.size) break;
+      deep = true;
+      i = deepQ.has(ply - 1) ? ply - 1 : deepQ.has(ply) ? ply : [...deepQ].sort((a, b) => a - b)[0];
     }
+    const stm = fens[i].split(' ')[1];
+    const raw = await eng.analyse(fens[i], deep ? DEEP : DEPTH);
+    if (deep) { D[i] = toEval(raw, stm); deepQ.delete(i); }
+    else if (A[i]) continue;
+    else A[i] = toEval(raw, stm);
     const changed = tryClassify(i - 1) | tryClassify(i);
     setStatus(); renderGraph();
     if (changed) renderSummary();
